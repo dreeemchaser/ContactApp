@@ -1,0 +1,19 @@
+$kind: http-request
+name: Upload Contact Photo
+method: PUT
+url: "{{baseUrl}}contacts/photo"
+body:
+  type: formdata
+  content:
+    - type: file
+      key: file
+      src:
+        - /Users/dreamer/Downloads/Cartoon_1.png
+      description: The photo file to upload
+      disabled: false
+    - type: text
+      key: id
+      value: 3b1f3826-28d2-43fa-af6f-58294c5b62bb
+      description: ""
+      disabled: false
+order: 4000

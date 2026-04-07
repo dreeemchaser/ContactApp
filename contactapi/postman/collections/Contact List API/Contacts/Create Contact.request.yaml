@@ -1,0 +1,19 @@
+$kind: http-request
+name: Create Contact
+method: POST
+url: "{{baseUrl}}contacts"
+headers:
+  Content-Type: application/json
+body:
+  type: json
+  content: |-
+    {
+      "name": "Priya Nair",
+      "email": "priya.nair@example.com",
+      "title": "UX Designer",
+      "phone": "+1654321098",
+      "address": "22 Birch Lane, Chicago",
+      "status": "Inactive",
+      "photoUrl": ""
+    }
+order: 1000

@@ -1,0 +1,5 @@
+$kind: http-request
+name: image
+url: http://localhost:8080/contacts/image/3b1f3826-28d2-43fa-af6f-58294c5b62bb.png
+method: GET
+order: 453751968108044

@@ -1,0 +1,5 @@
+$kind: http-request
+name: Get All Contacts
+method: GET
+url: "{{baseUrl}}contacts"
+order: 2000
