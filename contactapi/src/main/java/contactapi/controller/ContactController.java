@@ -4,17 +4,14 @@ import contactapi.domain.Contact;
 import contactapi.service.ContactService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.awt.*;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.List;
 
 import static contactapi.constant.Constant.PHOTO_DIRECTORY;
 import static org.springframework.http.MediaType.*;
