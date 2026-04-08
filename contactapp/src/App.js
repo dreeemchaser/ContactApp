@@ -14,11 +14,11 @@ function App() {
       setCurrentPage(page);
 
       // Call to the backend.
-      const data = await getContacts(page, size);
+      const response = await getContacts(page, size);
 
-      // Set Data & Log it for testing. 
-      setData(data);
-      console.log(data);
+      // Set Data & Log it for testing.
+      setData(response.data);
+      console.log(response.data);
 
 
     } catch (error) {
@@ -33,7 +33,20 @@ function App() {
   return (
     <div>
       <Header></Header>
-        <h1> Contact List </h1>
+                <div>
+          <p>Total Contacts: {data.totalElements || 0}</p>
+          {data.content && data.content.length > 0 ? (
+            <ul>
+              {data.content.map((contact) => (
+                <li key={contact.id}>
+                  {contact.name} - {contact.email}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p>No contacts found.</p>
+          )}
+        </div>
     </div>
   );
 }

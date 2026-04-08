@@ -1,0 +1,130 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: contactapp-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: administrator
+      POSTGRES_DB: contactapi
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      # Named volume for persistent data
+      - postgres_data:/var/lib/postgresql/data
+      # Optional: mounting initialization scripts
+      # - ./init-db.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - docker-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d contactapi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    # ============================================
+    # Spring Boot API Service
+    # ============================================
+  api:
+    build:
+      context: ./contactapi
+      dockerfile: Dockerfile
+    container_name: contactapp-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # Database connection
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/contactapi
+      SPRING_DATASOURCE_USERNAME: admin
+      SPRING_DATASOURCE_PASSWORD: administrator
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+
+      # JPA/Hibernate configuration
+      SPRING_JPA_GENERATE_DDL: "true"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+
+      # File upload configuration
+      SPRING_SERVLET_MULTIPART_MAX_FILE_SIZE: 100MB
+      SPRING_SERVLET_MULTIPART_MAX_REQUEST_SIZE: 100MB
+
+      # Server port
+      SERVER_PORT: 8080
+
+      # Logging
+      LOGGING_LEVEL_ROOT: INFO
+      LOGGING_LEVEL_CONTACTAPI: DEBUG
+    ports:
+      - "8080:8080"
+    volumes:
+      # Volume for persistent photo storage
+      - contact_photos:/app/photos
+    networks:
+      - docker-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/contacts",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    # ============================================
+    # React Frontend Service
+    # ============================================
+  frontend:
+    build:
+      context: ./contactapp
+      dockerfile: Dockerfile
+    container_name: contactapp-frontend
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+    networks:
+      - docker-net
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://127.0.0.1:3000/health",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    environment:
+      # Optional: React environment variables
+      REACT_APP_API_URL: http://api:8080
+# ============================================
+# Networks
+# ============================================
+networks:
+  docker-net:
+    driver: bridge
+
+# ============================================
+# Named Volumes
+# ============================================
+volumes:
+  postgres_data:
+    driver: local
+  contact_photos:
+    driver: local
