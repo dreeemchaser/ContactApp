@@ -8,6 +8,10 @@ FROM node:20-alpine AS builder
 # Set the working directory inside the container
 WORKDIR /app
 
+# Build-time variable for the API URL
+ARG REACT_APP_API_URL=http://localhost:8080
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 # Copy dependency manifests first to leverage Docker cache when dependencies do not change
 COPY package.json package-lock.json* ./
 
