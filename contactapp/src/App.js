@@ -1,6 +1,7 @@
 import "./App.css";
 import Header from "./components/Header";
 import ContactList from "./components/ContactList";
+import ContactDetails from "./components/ContactDetails";
 import { useEffect, useState } from "react";
 import { getContacts } from "./api/ContactService";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -42,6 +43,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to={"/contacts"} />} />
             <Route path="/contacts" element={<ContactList data={data} currentPage={currentPage} getAllContacts={getAllContacts}/> }/>
+            <Route path="/contacts/:id" element={<ContactDetails />} />
           </Routes>
         </div>
       </main>
