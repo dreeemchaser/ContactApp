@@ -1,11 +1,14 @@
 import { Link } from 'react-router-dom'
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 const Contact = ({ contact }) => {
+  const photoSrc = contact.photoURL ? `${API_URL}/contacts/image/${contact.photoURL}` : null;
   return (
     <Link to={`/contacts/${contact.id}`} className="contact__item">
         <div className='contact__header'>
             <div className='contact__image'>
-                <img src={contact.photoURL} alt={contact.name} />
+                <img src={photoSrc} alt={contact.name} />
             </div>
               <div className='contact__details'>
                 <p className='contact_name'>{contact.name.substring(0, 15)}</p>

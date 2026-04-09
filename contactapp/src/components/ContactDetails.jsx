@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getContact } from '../api/ContactService';
 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
 const ContactDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -21,11 +23,13 @@ const ContactDetails = () => {
 
   if (!contact) return <p>Loading...</p>;
 
+  const photoSrc = contact.photoURL ? `${API_URL}/contacts/image/${contact.photoURL}` : null;
+
   return (
     <div className='profile'>
 
       <div className='profile__details'>
-        <img src={contact.photoURL} alt={contact.name} />
+        <img src={photoSrc} alt={contact.name} />
         <div className='profile__metadata'>
           <p className='profile__name'>{contact.name}</p>
           <p className='profile__muted'>{contact.title}</p>

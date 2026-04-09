@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,9 +70,7 @@ public class ContactService {
             }
 
             Files.copy(image.getInputStream(), fileStorageLocation.resolve(fileName), REPLACE_EXISTING);
-            return ServletUriComponentsBuilder.fromCurrentContextPath()
-                    .path("/contacts/image/" + fileName)
-                    .toString();
+            return fileName;
         } catch (Exception exception) {
             throw new RuntimeException("Unable to save image.");
         }
