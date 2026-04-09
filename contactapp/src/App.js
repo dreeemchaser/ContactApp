@@ -8,7 +8,7 @@ function App() {
   const [data, setData] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
 
-  const getAllContacts = async (page = 9, size = 10) => {
+  const getAllContacts = async (page = 0, size = 10) => {
     try{
 
       setCurrentPage(page);
@@ -34,7 +34,7 @@ function App() {
     <div>
       <Header></Header>
                 <div>
-          <p>Total Contacts: {data.totalElements || 0}</p>
+          <p>Total Contacts: {data.page?.totalElements || 0}</p>
           {data.content && data.content.length > 0 ? (
             <ul>
               {data.content.map((contact) => (
