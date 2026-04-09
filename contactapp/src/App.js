@@ -1,16 +1,16 @@
-import './App.css';
-import Header from './components/Header';
-import { useEffect, useState } from 'react';
-import { getContacts } from './api/ContactService';
+import "./App.css";
+import Header from "./components/Header";
+import ContactList from "./components/ContactList";
+import { useEffect, useState } from "react";
+import { getContacts } from "./api/ContactService";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 function App() {
-
   const [data, setData] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
 
   const getAllContacts = async (page = 0, size = 10) => {
-    try{
-
+    try {
       setCurrentPage(page);
 
       // Call to the backend.
@@ -19,35 +19,33 @@ function App() {
       // Set Data & Log it for testing.
       setData(response.data);
       console.log(response.data);
-
-
     } catch (error) {
       console.log(error);
     }
-  }
+  };
 
   useEffect(() => {
     getAllContacts();
   }, []);
 
+  const toggleModal = () => {
+    console.log(
+      "I was clicked. This functionality will be implemented in the future.",
+    );
+  };
+
   return (
-    <div>
-      <Header></Header>
-                <div>
-          <p>Total Contacts: {data.page?.totalElements || 0}</p>
-          {data.content && data.content.length > 0 ? (
-            <ul>
-              {data.content.map((contact) => (
-                <li key={contact.id}>
-                  {contact.name} - {contact.email}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No contacts found.</p>
-          )}
+    <>
+      <Header toggleModal={toggleModal} nOfContacts={data.page?.totalElements} />
+      <main className="main">
+        <div className="container">
+          <Routes>
+            <Route path="/" element={<Navigate to={"/contacts"} />} />
+            <Route path="/contacts" element={<ContactList data={data} currentPage={currentPage} getAllContacts={getAllContacts}/> }/>
+          </Routes>
         </div>
-    </div>
+      </main>
+    </>
   );
 }
 

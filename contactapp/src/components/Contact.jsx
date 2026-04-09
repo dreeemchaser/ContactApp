@@ -5,7 +5,7 @@ const Contact = ({ contact }) => {
     <Link to={`/contacts/${contact.id}`} className="contact_item">
         <div className='contact_header'>
             <div className='contact_image'>
-                <img src={contact.photoUrl} alt={contact.name} />
+                <img src={contact.photoURL} alt={contact.name} />
             </div>
               <div className='contact_details'>
                 <p className='contact_name'>{contact.name.substring(0, 15)}</p>
