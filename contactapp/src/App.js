@@ -2,6 +2,7 @@ import "./App.css";
 import Header from "./components/Header";
 import ContactList from "./components/ContactList";
 import ContactDetails from "./components/ContactDetails";
+import NewContactModal from "./components/NewContactModal";
 import { useEffect, useState } from "react";
 import { getContacts } from "./api/ContactService";
 import { Routes, Route, Navigate } from "react-router-dom";
@@ -29,15 +30,11 @@ function App() {
     getAllContacts();
   }, []);
 
-  const toggleModal = () => {
-    console.log(
-      "I was clicked. This functionality will be implemented in the future.",
-    );
-  };
-
   return (
     <>
-      <Header toggleModal={toggleModal} nOfContacts={data.page?.totalElements} />
+      <Header nOfContacts={data.page?.totalElements}>
+        <NewContactModal onContactSaved={getAllContacts} />
+      </Header>
       <main className="main">
         <div className="container">
           <Routes>
