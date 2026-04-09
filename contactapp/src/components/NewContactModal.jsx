@@ -1,25 +1,45 @@
 import { useRef, useState } from 'react';
-import { saveContact } from '../api/ContactService';
+import { saveContact, updatePhoto } from '../api/ContactService';
 
 const NewContactModal = ({ onContactSaved }) => {
   const dialogRef = useRef(null);
   const [contact, setContact] = useState({
     name: '', email: '', phone: '', title: '', address: '', status: 'active'
   });
+  const [photo, setPhoto] = useState(null);
+  const [preview, setPreview] = useState(null);
 
   const open = () => dialogRef.current?.showModal();
   const close = () => {
     setContact({ name: '', email: '', phone: '', title: '', address: '', status: 'active' });
+    setPhoto(null);
+    setPreview(null);
     dialogRef.current?.close();
   };
 
   const handleChange = (e) => setContact({ ...contact, [e.target.name]: e.target.value });
 
+  const handlePhotoChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setPhoto(file);
+    setPreview(URL.createObjectURL(file));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await saveContact(contact);
-      onContactSaved();
+      const response = await saveContact(contact);
+      const savedContact = response.data;
+
+      if (photo) {
+        const formData = new FormData();
+        formData.append('id', savedContact.id);
+        formData.append('file', photo);
+        await updatePhoto(formData);
+      }
+
+      await onContactSaved();
       close();
     } catch (error) {
       console.log(error);
@@ -73,6 +93,17 @@ const NewContactModal = ({ onContactSaved }) => {
                 <span className='details'>Status</span>
                 <input type='text' name='status' value={contact.status} onChange={handleChange} />
               </div>
+
+              <div className='input-box'>
+                <span className='details'>Photo</span>
+                <input type='file' name='photo' accept='image/*' onChange={handlePhotoChange} />
+              </div>
+
+              {preview && (
+                <div className='input-box'>
+                  <img src={preview} alt='preview' style={{ width: '80px', borderRadius: '50%', border: '3px solid var(--selective-blue)' }} />
+                </div>
+              )}
 
             </div>
 
