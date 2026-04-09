@@ -1,4 +1,4 @@
-package contactapi;
+package contactapi.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,7 +26,7 @@ import static org.springframework.http.HttpMethod.PUT;
 
 
 @Configuration
-public class config {
+public class Config {
 
     @Bean
     public CorsFilter corsFilter() {

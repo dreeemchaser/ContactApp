@@ -1,70 +1,79 @@
-# Getting Started with Create React App
+# ContactApp — React Frontend
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+React frontend for the ContactApp project, built with Create React App and served via Nginx in Docker.
+
+## Project Structure
+
+```
+contactapp/
+├── src/
+│   ├── api/
+│   │   └── ContactService.js   # Axios API calls to backend
+│   ├── components/
+│   │   ├── Contact.jsx
+│   │   ├── ContactDetails.jsx
+│   │   ├── ContactList.jsx
+│   │   └── Header.jsx
+│   ├── App.js
+│   └── index.js
+├── public/
+├── Dockerfile                  # Multi-stage build: Node builder + Nginx runtime
+├── nginx.conf                  # Nginx config with SPA routing and API proxy
+└── package.json
+```
+
+## Running with Docker (Recommended)
+
+From the project root:
+
+```bash
+docker-compose up --build
+```
+
+Frontend will be available at: **http://localhost:3000**
+
+> Any code changes require a rebuild: `docker-compose up --build`
+
+## Running Locally (Development)
+
+```bash
+npm install
+npm start
+```
+
+App will be available at: **http://localhost:3000**
+
+> Hot reload is active in local dev mode. Changes reflect automatically without restart.
+
+## Environment Variables
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `REACT_APP_API_URL` | Backend API base URL | Falls back to `http://localhost:8080` |
+
+In Docker, this is injected at build time via `docker-compose.yml`:
+```yaml
+args:
+  REACT_APP_API_URL: http://localhost:8080
+```
+
+## API Integration
+
+All backend calls are in `src/api/ContactService.js`:
+
+| Function | Method | Endpoint |
+|----------|--------|----------|
+| `getContacts(page, size)` | GET | `/contacts?page=&size=` |
+| `getContact(id)` | GET | `/contacts/{id}` |
+| `saveContact(contact)` | POST | `/contacts` |
+| `updateContact(contact)` | POST | `/contacts` |
+| `updatePhoto(formData)` | PUT | `/contacts/photo` |
+| `deleteContact(id)` | DELETE | `/contacts/{id}` |
 
 ## Available Scripts
 
-In the project directory, you can run:
-
-### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
-### `npm run build`
-
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
-
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
-
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+| Script | Description |
+|--------|-------------|
+| `npm start` | Start local dev server at http://localhost:3000 |
+| `npm run build` | Build production bundle to `build/` |
+| `npm test` | Run tests in interactive watch mode |
