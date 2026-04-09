@@ -17,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.net.URI;
+import org.springframework.http.HttpStatus;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
@@ -100,9 +101,13 @@ public class ContactController {
             @ApiResponse(responseCode = "404", description = "Photo not found"),
             @ApiResponse(responseCode = "500", description = "Internal server error")
     })
-    public byte[] getPhoto(
+    public ResponseEntity<byte[]> getPhoto(
             @Parameter(description = "Photo filename", example = "contact_photo_123.jpg")
-            @PathVariable String filename) throws IOException {
-        return Files.readAllBytes(Paths.get(PHOTO_DIRECTORY + filename));
+            @PathVariable String filename) {
+        try {
+            return ResponseEntity.ok().body(Files.readAllBytes(Paths.get(PHOTO_DIRECTORY + filename)));
+        } catch (IOException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }
