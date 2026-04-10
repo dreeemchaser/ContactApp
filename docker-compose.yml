@@ -75,7 +75,7 @@ services:
           "--quiet",
           "--tries=1",
           "--spider",
-          "http://localhost:8080/contacts",
+          "http://localhost:8080/actuator/health",
         ]
       interval: 10s
       timeout: 5s
@@ -109,6 +109,30 @@ services:
           "--spider",
           "http://127.0.0.1:3000/health",
         ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+    # ============================================
+    # Dashboard Service
+    # ============================================
+  dashboard:
+    build:
+      context: ./contactdashboard
+      dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: http://localhost:8080
+    container_name: contactapp-dashboard
+    depends_on:
+      api:
+        condition: service_healthy
+    ports:
+      - "3001:3001"
+    networks:
+      - docker-net
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:3001/health"]
       interval: 10s
       timeout: 5s
       retries: 5
