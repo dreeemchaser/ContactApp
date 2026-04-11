@@ -93,6 +93,20 @@ public class ContactController {
         return ResponseEntity.ok().body(contactService.uploadPhoto(id, file));
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete contact by ID", description = "Deletes a specific contact by its unique identifier.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Contact deleted successfully"),
+            @ApiResponse(responseCode = "404", description = "Contact not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<Void> deleteContact(
+            @Parameter(description = "Contact ID (UUID)", example = "550e8400-e29b-41d4-a716-446655440000")
+            @PathVariable String id) {
+        contactService.deleteContact(contactService.getContact(id));
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping(path = "/image/{filename}", produces = {IMAGE_JPEG_VALUE, IMAGE_PNG_VALUE, IMAGE_GIF_VALUE})
     @Operation(summary = "Get contact photo", description = "Retrieves a photo for a contact. Returns the image file in JPEG, PNG, or GIF format.")
     @ApiResponses(value = {
