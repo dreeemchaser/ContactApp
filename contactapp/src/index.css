@@ -944,6 +944,25 @@ dialog[open] { animation: modalIn 0.18s ease; }
 .coming-soon h2 { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
 .coming-soon p  { font-size: 0.88rem; max-width: 360px; }
 
+/* ── Doc Dropzone ── */
+.doc-dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-md);
+  padding: 2rem 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.doc-dropzone:hover { border-color: var(--brand); background: var(--brand-light); }
+.doc-dropzone i { font-size: 2rem; color: var(--brand); }
+.doc-dropzone p { font-size: 0.88rem; font-weight: 500; color: var(--text-primary); }
+.doc-dropzone span { font-size: 0.75rem; color: var(--text-muted); }
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .sidebar { transform: translateX(-100%); }

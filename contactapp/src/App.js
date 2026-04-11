@@ -10,7 +10,8 @@ import EmployeesPage from './pages/EmployeesPage';
 import EmployeeDetailsPage from './pages/EmployeeDetailsPage';
 import LeavePage from './pages/LeavePage';
 import TimesheetsPage from './pages/TimesheetsPage';
-import { DocumentsPage, PerformancePage, SalaryPage, BenefitsPage } from './pages/ModuleShells';
+import DocumentsPage from './pages/DocumentsPage';
+import { PerformancePage, SalaryPage, BenefitsPage } from './pages/ModuleShells';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
