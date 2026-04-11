@@ -44,8 +44,8 @@ function App() {
     <>
       <Header nOfContacts={data.page?.totalElements}>
         <NewContactModal onContactSaved={getAllContacts} />
-        <button onClick={() => { logout(); setLoggedIn(false); }} className="btn btn-danger" style={{ marginLeft: '0.5rem' }}>
-          <i className="bi bi-box-arrow-right"></i> Logout
+        <button onClick={() => { logout(); setLoggedIn(false); }} className='btn btn-danger'>
+          <i className='bi bi-box-arrow-right'></i> Logout
         </button>
       </Header>
       <main className="main">

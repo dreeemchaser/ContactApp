@@ -1,5 +1,5 @@
 const Spinner = () => (
-  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '4rem' }}>
+  <div className='spinner-wrapper'>
     <div className='spinner'></div>
   </div>
 );
