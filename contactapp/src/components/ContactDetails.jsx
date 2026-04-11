@@ -15,6 +15,7 @@ const ContactDetails = ({ onContactUpdated }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
 
   useEffect(() => {
     getContact(id).then(r => setContact(r.data)).catch(console.log);
@@ -42,13 +43,20 @@ const ContactDetails = ({ onContactUpdated }) => {
     setError(null);
     setSuccess(null);
     try {
-      await updateContact(contact);
+      let updatedContact = { ...contact };
+
       if (photo) {
         const formData = new FormData();
         formData.append('id', contact.id);
         formData.append('file', photo);
-        await updatePhoto(formData);
+        const photoRes = await updatePhoto(formData);
+        updatedContact = { ...updatedContact, photoURL: photoRes.data };
+        setContact(updatedContact);
+        setPreview(null);
+        setPhoto(null);
       }
+
+      await updateContact(updatedContact);
       setSuccess('Contact saved successfully.');
       onContactUpdated?.();
     } catch (e) {
@@ -59,65 +67,71 @@ const ContactDetails = ({ onContactUpdated }) => {
   };
 
   const handleDelete = async () => {
-    if (!window.confirm(`Delete ${contact.name}? This cannot be undone.`)) return;
     try {
-      await deleteContact(contact.id);
+      await deleteContact(id);
       onContactUpdated?.();
       navigate('/contacts');
     } catch (e) {
       setError('Failed to delete contact.');
+      setConfirmDelete(false);
     }
   };
+
+  const isActive = contact.status?.toLowerCase() === 'active';
 
   return (
     <div className='profile'>
 
+      {/* ── Left Panel ── */}
       <div className='profile__details'>
-        <label htmlFor='photo-upload' style={{ cursor: 'pointer', position: 'relative' }}>
+        <label htmlFor='photo-upload'>
           <img src={photoSrc} alt={contact.name} />
           <span className='photo-overlay'><i className='bi bi-camera'></i></span>
         </label>
         <input id='photo-upload' type='file' accept='image/*' onChange={handlePhotoChange} style={{ display: 'none' }} />
-        <div className='profile__metadata'>
-          <p className='profile__name'>{contact.name}</p>
-          <p className='profile__muted'>{contact.title}</p>
-          <button onClick={() => navigate('/contacts')} className='btn'>
-            <i className='bi bi-arrow-left'></i> Back
-          </button>
+
+        <div className='profile__identity'>
+          <p className='profile__name'>
+            {contact.name}
+            {contact.title && <span className='profile__title-inline'> — {contact.title}</span>}
+          </p>
+          <span className={`status-badge ${isActive ? 'status-badge--active' : 'status-badge--inactive'}`}>
+            <i className={`bi ${isActive ? 'bi-check-circle' : 'bi-x-circle'}`}></i>
+            {contact.status}
+          </span>
         </div>
+
+        <button onClick={() => navigate('/contacts')} className='btn btn-ghost profile__back'>
+          <i className='bi bi-arrow-left'></i> Back to Contacts
+        </button>
       </div>
 
+      {/* ── Right Panel ── */}
       <div className='profile__settings'>
         {error && <p className='feedback feedback--error'><i className='bi bi-exclamation-circle'></i> {error}</p>}
         {success && <p className='feedback feedback--success'><i className='bi bi-check-circle'></i> {success}</p>}
 
         <div className='user-details'>
-
           <div className='input-box'>
             <span className='details'>Name</span>
             <input type='text' name='name' value={contact.name || ''} onChange={handleChange} />
           </div>
-
           <div className='input-box'>
             <span className='details'>Email</span>
             <input type='email' name='email' value={contact.email || ''} onChange={handleChange} />
           </div>
-
           <div className='input-box'>
             <span className='details'>Phone</span>
             <input type='text' name='phone' value={contact.phone || ''} onChange={handleChange} />
           </div>
-
           <div className='input-box'>
             <span className='details'>Title</span>
             <input type='text' name='title' value={contact.title || ''} onChange={handleChange} />
           </div>
-
           <div className='input-box'>
             <span className='details'>Address</span>
             <input type='text' name='address' value={contact.address || ''} onChange={handleChange} />
           </div>
-
           <div className='input-box'>
             <span className='details'>Status</span>
             <select name='status' value={contact.status || 'active'} onChange={handleChange} className='input-select'>
@@ -125,11 +139,10 @@ const ContactDetails = ({ onContactUpdated }) => {
               <option value='inactive'>Inactive</option>
             </select>
           </div>
-
         </div>
 
         <div className='profile__actions'>
-          <button onClick={handleDelete} className='btn btn-danger'>
+          <button onClick={() => setConfirmDelete(true)} className='btn btn-danger'>
             <i className='bi bi-trash'></i> Delete
           </button>
           <button onClick={handleSave} className='btn' disabled={saving}>
@@ -137,6 +150,23 @@ const ContactDetails = ({ onContactUpdated }) => {
           </button>
         </div>
       </div>
+
+      {/* ── Confirm Delete Dialog ── */}
+      {confirmDelete && (
+        <div className='confirm-overlay'>
+          <div className='confirm-box'>
+            <div className='confirm-box__icon'>
+              <i className='bi bi-exclamation-triangle'></i>
+            </div>
+            <h3>Delete Contact</h3>
+            <p>Are you sure you want to delete <strong>{contact.name}</strong>? This cannot be undone.</p>
+            <div className='confirm-box__actions'>
+              <button onClick={() => setConfirmDelete(false)} className='btn btn-ghost'>Cancel</button>
+              <button onClick={handleDelete} className='btn btn-danger'>Yes, Delete</button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

@@ -329,20 +329,19 @@ i { vertical-align: middle; }
   grid-template-columns: 300px 1fr;
   gap: 1.5rem;
   margin-top: 2rem;
-  align-items: start;
+  align-items: stretch;
 }
 
 .profile__details {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--blue) 0%, hsl(210, 69%, 35%) 100%);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 0.75rem;
-  box-shadow: var(--shadow-sm);
+  gap: 1rem;
+  box-shadow: var(--shadow-md);
 }
 
 .profile__details label {
@@ -356,7 +355,7 @@ i { vertical-align: middle; }
   height: 110px;
   border-radius: 50%;
   object-fit: cover;
-  border: 3px solid var(--blue-light);
+  border: 3px solid hsla(0, 0%, 100%, 0.4);
 }
 
 .photo-overlay {
@@ -375,19 +374,41 @@ i { vertical-align: middle; }
 
 .profile__details label:hover .photo-overlay { opacity: 1; }
 
+.profile__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+}
+
 .profile__name {
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
-  color: var(--text-primary);
+  color: white;
+  line-height: 1.3;
 }
 
-.profile__muted {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: -0.5rem;
+.profile__title-inline {
+  font-weight: 400;
+  color: hsla(0, 0%, 100%, 0.75);
+  font-size: 0.9rem;
 }
 
-.profile__metadata { width: 100%; }
+.profile__back {
+  margin-top: auto;
+  width: 100%;
+  justify-content: center;
+  background: hsla(0, 0%, 100%, 0.15);
+  border: 1px solid hsla(0, 0%, 100%, 0.25);
+  color: white;
+  box-shadow: none;
+}
+
+.profile__back:hover {
+  background: hsla(0, 0%, 100%, 0.25);
+  box-shadow: none;
+}
 
 .profile__settings {
   background: var(--surface);
@@ -404,6 +425,64 @@ i { vertical-align: middle; }
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+}
+
+/* ============================================
+   CONFIRM DELETE DIALOG
+   ============================================ */
+.confirm-overlay {
+  position: fixed;
+  inset: 0;
+  background: hsla(0, 0%, 0%, 0.5);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  animation: fadeIn 0.15s ease;
+}
+
+.confirm-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  width: min(420px, 90vw);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.confirm-box__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: var(--red-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.confirm-box__icon i {
+  font-size: 1.4rem;
+  color: var(--red);
+}
+
+.confirm-box h3 { font-size: 1.1rem; font-weight: 700; }
+
+.confirm-box p {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.confirm-box__actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  margin-top: 0.5rem;
 }
 
 /* ============================================
@@ -622,6 +701,7 @@ dialog[open] { animation: fadeIn 0.2s ease; }
 @media (max-width: 768px) {
   .profile {
     grid-template-columns: 1fr;
+    align-items: stretch;
   }
 
   .user-details {
