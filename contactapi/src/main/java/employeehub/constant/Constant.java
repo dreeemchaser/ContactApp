@@ -1,4 +1,4 @@
-package contactapi.constant;
+package employeehub.constant;
 
 public class Constant {
     public static final String PHOTO_DIRECTORY = System.getenv("PHOTO_DIRECTORY") != null

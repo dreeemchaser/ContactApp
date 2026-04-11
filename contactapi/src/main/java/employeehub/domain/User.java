@@ -1,4 +1,4 @@
-package contactapi.domain;
+package employeehub.domain;
 
 import jakarta.persistence.*;
 import lombok.Data;

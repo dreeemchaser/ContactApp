@@ -1,8 +1,8 @@
-package contactapi.controller;
+package employeehub.controller;
 
-import contactapi.domain.User;
-import contactapi.repository.UserRepository;
-import contactapi.security.JwtUtil;
+import employeehub.domain.User;
+import employeehub.repository.UserRepository;
+import employeehub.security.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

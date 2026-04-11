@@ -1,6 +1,6 @@
-package contactapi.security;
+package employeehub.security;
 
-import contactapi.repository.UserRepository;
+import employeehub.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

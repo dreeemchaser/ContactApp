@@ -1,4 +1,4 @@
-package contactapi.security;
+package employeehub.security;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +36,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/v3/api-docs/**",
                                 "/actuator/health",
-                                "/contacts/image/**"
+                                "/employees/photo/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
