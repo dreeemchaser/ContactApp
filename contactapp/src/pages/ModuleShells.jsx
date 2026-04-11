@@ -13,15 +13,6 @@ const ComingSoon = ({ title, breadcrumb, icon, description }) => (
   </>
 );
 
-export const LeavePage = () => (
-  <ComingSoon
-    title='Leave Management'
-    breadcrumb='Employee Hub / Leave'
-    icon='bi-calendar-check'
-    description='Apply for leave, view balances, and track your leave history. Coming soon.'
-  />
-);
-
 export const TimesheetsPage = () => (
   <ComingSoon
     title='Timesheets'

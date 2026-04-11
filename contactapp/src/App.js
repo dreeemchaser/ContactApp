@@ -8,7 +8,8 @@ import Sidebar from './components/Sidebar';
 import DashboardPage from './pages/DashboardPage';
 import EmployeesPage from './pages/EmployeesPage';
 import EmployeeDetailsPage from './pages/EmployeeDetailsPage';
-import { LeavePage, TimesheetsPage, DocumentsPage, PerformancePage, SalaryPage, BenefitsPage } from './pages/ModuleShells';
+import LeavePage from './pages/LeavePage';
+import { TimesheetsPage, DocumentsPage, PerformancePage, SalaryPage, BenefitsPage } from './pages/ModuleShells';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
