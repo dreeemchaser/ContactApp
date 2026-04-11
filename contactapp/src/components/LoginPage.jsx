@@ -25,25 +25,47 @@ const LoginPage = ({ onLogin }) => {
     <div className='login-wrapper'>
       <div className='login-box'>
         <div className='login-box__brand'>
-          <i className='bi bi-person-lines-fill'></i>
-          <span>ContactApp</span>
+          <div className='login-box__brand-icon'>
+            <i className='bi bi-building'></i>
+          </div>
+          <div>
+            <div className='login-box__brand-text'>Employee Hub</div>
+            <div className='login-box__brand-sub'>HR Portal</div>
+          </div>
         </div>
+
         <h2>Welcome back</h2>
-        <p>Sign in to manage your contacts</p>
+        <p>Sign in to your account to continue</p>
+
         <form onSubmit={handleSubmit}>
-          <div className='input-box'>
-            <span className='details'>Username</span>
-            <input type='text' value={username} onChange={e => setUsername(e.target.value)} required autoFocus />
+          <div className='form-group'>
+            <label className='form-label'>Username</label>
+            <input
+              className='form-control'
+              type='text'
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              required
+              autoFocus
+            />
           </div>
-          <div className='input-box'>
-            <span className='details'>Password</span>
-            <input type='password' value={password} onChange={e => setPassword(e.target.value)} required />
+          <div className='form-group'>
+            <label className='form-label'>Password</label>
+            <input
+              className='form-control'
+              type='password'
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+            />
           </div>
+
           {error && (
             <p className='login-error'>
               <i className='bi bi-exclamation-circle'></i> {error}
             </p>
           )}
+
           <button type='submit' className='btn' disabled={loading}>
             {loading ? 'Signing in...' : 'Sign In'}
           </button>
