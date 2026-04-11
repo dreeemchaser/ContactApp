@@ -10,19 +10,18 @@ import { Routes, Route, Navigate } from "react-router-dom";
 function App() {
   const [data, setData] = useState({});
   const [currentPage, setCurrentPage] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const getAllContacts = async (page = 0, size = 10) => {
     try {
+      setLoading(true);
       setCurrentPage(page);
-
-      // Call to the backend.
       const response = await getContacts(page, size);
-
-      // Set Data & Log it for testing.
       setData(response.data);
-      console.log(response.data);
     } catch (error) {
       console.log(error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -39,8 +38,8 @@ function App() {
         <div className="container">
           <Routes>
             <Route path="/" element={<Navigate to={"/contacts"} />} />
-            <Route path="/contacts" element={<ContactList data={data} currentPage={currentPage} getAllContacts={getAllContacts}/> }/>
-            <Route path="/contacts/:id" element={<ContactDetails />} />
+            <Route path="/contacts" element={<ContactList data={data} currentPage={currentPage} getAllContacts={getAllContacts} loading={loading} />} />
+            <Route path="/contacts/:id" element={<ContactDetails onContactUpdated={getAllContacts} />} />
           </Routes>
         </div>
       </main>

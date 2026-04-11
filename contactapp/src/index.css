@@ -617,3 +617,138 @@ input[type=file]::file-selector-button:hover {
     flex-direction: column;
   } */
 }
+
+/* SPINNER */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--border-color);
+  border-top-color: var(--selective-blue);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* EMPTY STATE */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: var(--dark-gray);
+  gap: 1rem;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: var(--light-gray-2);
+}
+
+.empty-state p {
+  font-size: 0.95rem;
+  color: var(--dark-gray);
+}
+
+/* STATUS BADGE */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+}
+
+.status-badge--active {
+  background-color: hsla(145, 60%, 42%, 0.12);
+  color: hsl(145, 60%, 32%);
+}
+
+.status-badge--inactive {
+  background-color: hsla(351, 83%, 61%, 0.12);
+  color: var(--radical-red);
+}
+
+/* FEEDBACK */
+.feedback {
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-5);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.feedback--error {
+  background-color: hsla(351, 83%, 61%, 0.1);
+  color: var(--radical-red);
+}
+
+.feedback--success {
+  background-color: hsla(145, 60%, 42%, 0.1);
+  color: hsl(145, 60%, 32%);
+}
+
+/* PHOTO OVERLAY */
+.profile__details label {
+  position: relative;
+  display: inline-block;
+}
+
+.photo-overlay {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  background: var(--selective-blue);
+  color: white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.profile__details label:hover .photo-overlay {
+  opacity: 1;
+}
+
+/* PROFILE ACTIONS */
+.profile__actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 2px solid hsla(210, 10%, 23%, 0.07);
+}
+
+.profile__actions .btn {
+  padding: 7px 15px;
+}
+
+/* SELECT INPUT */
+.input-select {
+  height: 45px;
+  width: 100%;
+  outline: none;
+  font-size: 16px;
+  border-radius: 5px;
+  padding-left: 15px;
+  border: 1px solid #e6e1e1;
+  background-color: white;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.input-select:focus {
+  border-color: #b9b7ba;
+}

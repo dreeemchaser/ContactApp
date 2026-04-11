@@ -3,17 +3,18 @@ import { saveContact, updatePhoto } from '../api/ContactService';
 
 const NewContactModal = ({ onContactSaved }) => {
   const dialogRef = useRef(null);
-  const [contact, setContact] = useState({
-    name: '', email: '', phone: '', title: '', address: '', status: 'active'
-  });
+  const [contact, setContact] = useState({ name: '', email: '', phone: '', title: '', address: '', status: 'active' });
   const [photo, setPhoto] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
-  const open = () => dialogRef.current?.showModal();
+  const open = () => { setError(null); dialogRef.current?.showModal(); };
   const close = () => {
     setContact({ name: '', email: '', phone: '', title: '', address: '', status: 'active' });
     setPhoto(null);
     setPreview(null);
+    setError(null);
     dialogRef.current?.close();
   };
 
@@ -28,21 +29,22 @@ const NewContactModal = ({ onContactSaved }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSaving(true);
+    setError(null);
     try {
       const response = await saveContact(contact);
-      const savedContact = response.data;
-
       if (photo) {
         const formData = new FormData();
-        formData.append('id', savedContact.id);
+        formData.append('id', response.data.id);
         formData.append('file', photo);
         await updatePhoto(formData);
       }
-
       await onContactSaved();
       close();
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      setError('Failed to save contact. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -61,6 +63,7 @@ const NewContactModal = ({ onContactSaved }) => {
         <div className='divider'></div>
 
         <div className='modal__body'>
+          {error && <p className='feedback feedback--error'><i className='bi bi-exclamation-circle'></i> {error}</p>}
           <form onSubmit={handleSubmit}>
             <div className='user-details'>
 
@@ -91,7 +94,10 @@ const NewContactModal = ({ onContactSaved }) => {
 
               <div className='input-box'>
                 <span className='details'>Status</span>
-                <input type='text' name='status' value={contact.status} onChange={handleChange} />
+                <select name='status' value={contact.status} onChange={handleChange} className='input-select'>
+                  <option value='active'>Active</option>
+                  <option value='inactive'>Inactive</option>
+                </select>
               </div>
 
               <div className='input-box'>
@@ -100,8 +106,8 @@ const NewContactModal = ({ onContactSaved }) => {
               </div>
 
               {preview && (
-                <div className='input-box'>
-                  <img src={preview} alt='preview' style={{ width: '80px', borderRadius: '50%', border: '3px solid var(--selective-blue)' }} />
+                <div className='input-box' style={{ display: 'flex', alignItems: 'center' }}>
+                  <img src={preview} alt='preview' style={{ width: '60px', height: '60px', borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--selective-blue)' }} />
                 </div>
               )}
 
@@ -111,7 +117,9 @@ const NewContactModal = ({ onContactSaved }) => {
 
             <div className='modal__footer'>
               <button type='button' onClick={close} className='btn btn-danger'>Cancel</button>
-              <button type='submit' className='btn'>Save Contact</button>
+              <button type='submit' className='btn' disabled={saving}>
+                {saving ? 'Saving...' : 'Save Contact'}
+              </button>
             </div>
           </form>
         </div>
