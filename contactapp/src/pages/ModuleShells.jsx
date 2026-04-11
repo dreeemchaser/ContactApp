@@ -13,15 +13,6 @@ const ComingSoon = ({ title, breadcrumb, icon, description }) => (
   </>
 );
 
-export const TimesheetsPage = () => (
-  <ComingSoon
-    title='Timesheets'
-    breadcrumb='Employee Hub / Timesheets'
-    icon='bi-clock-history'
-    description='Log your hours, submit timesheets, and view approval history. Coming soon.'
-  />
-);
-
 export const DocumentsPage = () => (
   <ComingSoon
     title='Documents'
