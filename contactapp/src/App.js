@@ -11,7 +11,9 @@ import EmployeeDetailsPage from './pages/EmployeeDetailsPage';
 import LeavePage from './pages/LeavePage';
 import TimesheetsPage from './pages/TimesheetsPage';
 import DocumentsPage from './pages/DocumentsPage';
-import { PerformancePage, SalaryPage, BenefitsPage } from './pages/ModuleShells';
+import PerformancePage from './pages/PerformancePage';
+import SalaryPage from './pages/SalaryPage';
+import BenefitsPage from './pages/BenefitsPage';
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
