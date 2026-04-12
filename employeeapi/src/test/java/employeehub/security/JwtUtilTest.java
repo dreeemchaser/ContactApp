@@ -54,13 +54,18 @@ class JwtUtilTest {
     }
 
     @Test
-    void isTokenValid_shouldReturnFalse_forExpiredToken() {
+    void isTokenValid_shouldThrow_forExpiredToken() {
         ReflectionTestUtils.setField(jwtUtil, "expiration", -1000L);
         String token = jwtUtil.generateToken("john@test.com", "EMPLOYEE");
         UserDetails userDetails = new User("john@test.com", "password", Collections.emptyList());
 
-        // expired tokens throw ExpiredJwtException — isTokenValid should return false
         assertThatThrownBy(() -> jwtUtil.isTokenValid(token, userDetails))
                 .isInstanceOf(io.jsonwebtoken.ExpiredJwtException.class);
+    }
+
+    @Test
+    void extractUsername_shouldThrow_forMalformedToken() {
+        assertThatThrownBy(() -> jwtUtil.extractUsername("not.a.valid.token"))
+                .isInstanceOf(Exception.class);
     }
 }
