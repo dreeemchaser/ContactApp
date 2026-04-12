@@ -54,6 +54,12 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
+    public Employee updatePhoto(String id, String filename) {
+        Employee employee = getById(id);
+        employee.setProfilePhoto(filename);
+        return employeeRepository.save(employee);
+    }
+
     private Employee mapToEmployee(Employee employee, EmployeeRequest req) {
         Department department = departmentRepository.findById(req.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found: " + req.getDepartmentId()));
