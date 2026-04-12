@@ -1,68 +1,69 @@
 # Sequence Diagrams
 
-## Create Contact Flow
+## Login Flow
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant ContactController
-    participant ContactService
-    participant ContactRepository
+    participant AuthController
+    participant AuthenticationManager
+    participant JwtUtil
     participant Database
 
-    Client->>ContactController: POST /contacts (Contact data)
-    ContactController->>ContactService: createContact(Contact)
-    ContactService->>ContactRepository: save(Contact)
-    ContactRepository->>Database: INSERT INTO contacts
-    Database-->>ContactRepository: Contact saved
-    ContactRepository-->>ContactService: Contact
-    ContactService-->>ContactController: Contact
-    ContactController-->>Client: 201 Created (Contact)
+    Client->>AuthController: POST /auth/login (username, password)
+    AuthController->>AuthenticationManager: authenticate(username, password)
+    AuthenticationManager->>Database: SELECT * FROM employees WHERE email = ?
+    Database-->>AuthenticationManager: Employee
+    AuthenticationManager-->>AuthController: Authentication
+    AuthController->>JwtUtil: generateToken(employee)
+    JwtUtil-->>AuthController: JWT token
+    AuthController-->>Client: 200 OK (token, username)
 ```
 
-## Get Contacts Flow
+## Create Employee Flow
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant ContactController
-    participant ContactService
-    participant ContactRepository
+    participant JwtAuthFilter
+    participant EmployeeController
+    participant EmployeeService
+    participant EmployeeRepository
     participant Database
 
-    Client->>ContactController: GET /contacts?page=0&size=10
-    ContactController->>ContactService: getAllContacts(0, 10)
-    ContactService->>ContactRepository: findAll(PageRequest)
-    ContactRepository->>Database: SELECT * FROM contacts ORDER BY name LIMIT 10
-    Database-->>ContactRepository: Contact list
-    ContactRepository-->>ContactService: Page<Contact>
-    ContactService-->>ContactController: Page<Contact>
-    ContactController-->>Client: 200 OK (Contact page)
+    Client->>JwtAuthFilter: POST /employees (Bearer token)
+    JwtAuthFilter->>JwtAuthFilter: validate token, set SecurityContext
+    JwtAuthFilter->>EmployeeController: forward request
+    EmployeeController->>EmployeeService: createEmployee(EmployeeRequest)
+    EmployeeService->>EmployeeRepository: save(Employee)
+    EmployeeRepository->>Database: INSERT INTO employees
+    Database-->>EmployeeRepository: Employee saved
+    EmployeeRepository-->>EmployeeService: Employee
+    EmployeeService-->>EmployeeController: Employee
+    EmployeeController-->>Client: 201 Created (Employee)
 ```
 
-## Get Single Contact Flow
+## Get Employees Flow
 
 ```mermaid
 sequenceDiagram
     participant Client
-    participant ContactController
-    participant ContactService
-    participant ContactRepository
+    participant JwtAuthFilter
+    participant EmployeeController
+    participant EmployeeService
+    participant EmployeeRepository
     participant Database
 
-    Client->>ContactController: GET /contacts/{id}
-    ContactController->>ContactService: getContact(id)
-    ContactService->>ContactRepository: findById(id)
-    ContactRepository->>Database: SELECT * FROM contacts WHERE id = ?
-    Database-->>ContactRepository: Contact or null
-    ContactRepository-->>ContactService: Optional<Contact>
-    alt Contact found
-        ContactService-->>ContactController: Contact
-        ContactController-->>Client: 200 OK (Contact)
-    else Contact not found
-        ContactService-->>ContactController: RuntimeException
-        ContactController-->>Client: 404 Not Found
-    end
+    Client->>JwtAuthFilter: GET /employees?page=0&size=10 (Bearer token)
+    JwtAuthFilter->>JwtAuthFilter: validate token
+    JwtAuthFilter->>EmployeeController: forward request
+    EmployeeController->>EmployeeService: getAllEmployees(0, 10)
+    EmployeeService->>EmployeeRepository: findAll(PageRequest)
+    EmployeeRepository->>Database: SELECT * FROM employees LIMIT 10
+    Database-->>EmployeeRepository: Employee list
+    EmployeeRepository-->>EmployeeService: Page~Employee~
+    EmployeeService-->>EmployeeController: Page~Employee~
+    EmployeeController-->>Client: 200 OK (Employee page)
 ```
 
 ## Upload Photo Flow
@@ -70,40 +71,29 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     participant Client
-    participant ContactController
-    participant ContactService
-    participant ContactRepository
+    participant JwtAuthFilter
+    participant EmployeeController
+    participant EmployeeService
+    participant EmployeeRepository
     participant FileSystem
     participant Database
 
-    Client->>ContactController: PUT /contacts/photo (id, file)
-    ContactController->>ContactService: uploadPhoto(id, file)
-    ContactService->>ContactRepository: findById(id)
-    ContactRepository->>Database: SELECT * FROM contacts WHERE id = ?
-    Database-->>ContactRepository: Contact
-    ContactRepository-->>ContactService: Contact
-    ContactService->>FileSystem: Save file to PHOTO_DIRECTORY
-    FileSystem-->>ContactService: File saved
-    ContactService->>ContactRepository: save(Contact with photoURL)
-    ContactRepository->>Database: UPDATE contacts SET photoURL = ? WHERE id = ?
-    Database-->>ContactRepository: Contact updated
-    ContactRepository-->>ContactService: Contact
-    ContactService-->>ContactController: photoURL
-    ContactController-->>Client: 200 OK (photoURL)
+    Client->>JwtAuthFilter: PUT /employees/{id}/photo (Bearer token, file)
+    JwtAuthFilter->>JwtAuthFilter: validate token
+    JwtAuthFilter->>EmployeeController: forward request
+    EmployeeController->>EmployeeService: uploadPhoto(id, file)
+    EmployeeService->>EmployeeRepository: findById(id)
+    EmployeeRepository->>Database: SELECT * FROM employees WHERE id = ?
+    Database-->>EmployeeRepository: Employee
+    EmployeeRepository-->>EmployeeService: Employee
+    EmployeeService->>FileSystem: Save file to PHOTO_DIRECTORY
+    FileSystem-->>EmployeeService: File saved
+    EmployeeService->>EmployeeRepository: save(Employee with profilePhoto)
+    EmployeeRepository->>Database: UPDATE employees SET profile_photo = ? WHERE id = ?
+    Database-->>EmployeeRepository: Employee updated
+    EmployeeRepository-->>EmployeeService: Employee
+    EmployeeService-->>EmployeeController: photoURL
+    EmployeeController-->>Client: 200 OK (photoURL)
 ```
 
-## Get Photo Flow
-
-```mermaid
-sequenceDiagram
-    participant Client
-    participant ContactController
-    participant FileSystem
-
-    Client->>ContactController: GET /contacts/image/{filename}
-    ContactController->>FileSystem: Read file from PHOTO_DIRECTORY/{filename}
-    FileSystem-->>ContactController: Image bytes
-    ContactController-->>Client: 200 OK (image/jpeg|png|gif)
-```
-
-These sequence diagrams illustrate the main interaction flows in the Contact API. The application follows a typical layered architecture with the controller handling HTTP requests, the service containing business logic, the repository managing data access, and external systems like the database and file system providing persistence.
+These sequence diagrams illustrate the main interaction flows in the Employee API. The JWT filter runs on every request to authenticate the caller before the request reaches the controller.

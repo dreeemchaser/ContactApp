@@ -11,22 +11,34 @@
 ## Project Structure
 
 ```
-contactapi/src/main/java/contactapi/
+employeeapi/src/main/java/employeehub/
 ├── Application.java
 ├── config/
 │   ├── Config.java                  # CORS configuration
+│   ├── DataSeeder.java              # Seed data on startup
 │   └── OpenApiConfiguration.java    # Swagger/OpenAPI setup
 ├── constant/
 │   └── Constant.java                # PHOTO_DIRECTORY, X_REQUESTED_WITH
 ├── controller/
-│   ├── ContactController.java       # REST endpoints
+│   ├── AuthController.java          # /auth endpoints
+│   ├── EmployeeController.java      # /employees endpoints
+│   ├── DepartmentController.java
+│   ├── TeamController.java
+│   ├── LeaveController.java
+│   ├── SalaryController.java
+│   ├── BenefitController.java
+│   ├── TimesheetController.java
+│   ├── PerformanceController.java
+│   ├── DocumentController.java
+│   ├── NotificationController.java
+│   ├── AuditLogController.java
 │   └── HealthController.java        # /health endpoint
-├── domain/
-│   └── Contact.java                 # JPA entity
-├── repository/
-│   └── ContactRepository.java       # JPA repository
-└── service/
-    └── ContactService.java          # Business logic, photo handling
+├── domain/                          # JPA entities and enums
+├── dto/                             # Request/response DTOs
+├── exception/                       # GlobalExceptionHandler
+├── repository/                      # JPA repositories
+├── security/                        # JWT filter, JwtUtil, SecurityConfig
+└── service/                         # Business logic per module
 ```
 
 ## Running the Backend
@@ -41,11 +53,11 @@ docker-compose up --build
 ### Locally
 
 ```bash
-cd contactapi
+cd employeeapi
 ./mvnw spring-boot:run
 ```
 
-Requires PostgreSQL on `localhost:5432` with database `contactapi`, user `admin`, password `administrator`.
+Requires PostgreSQL on `localhost:5432` with database `employeehub`, user `admin`, password `administrator`.
 
 ## Configuration
 
@@ -54,7 +66,7 @@ Requires PostgreSQL on `localhost:5432` with database `contactapi`, user `admin`
 ```yaml
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/contactapi}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/employeehub}
     username: ${SPRING_DATASOURCE_USERNAME:admin}
     password: ${SPRING_DATASOURCE_PASSWORD:administrator}
 ```
@@ -75,10 +87,11 @@ public static final String PHOTO_DIRECTORY = System.getenv("PHOTO_DIRECTORY") !=
 
 ## Adding New Features
 
-1. Update `Contact.java` entity if schema changes are needed
-2. Add repository methods in `ContactRepository.java`
-3. Implement business logic in `ContactService.java`
-4. Expose via `ContactController.java`
+1. Add or update the domain entity in `domain/`
+2. Add repository methods in the relevant `repository/` interface
+3. Implement business logic in the relevant `service/`
+4. Expose via the relevant `controller/`
+5. Add role-based access rules in `SecurityConfig` if needed
 
 ## Building
 
@@ -106,4 +119,4 @@ kill -9 <PID>
 **Database connection failed:**
 - Check PostgreSQL is running
 - Verify credentials in `application.yml`
-- Confirm `contactapi` database exists
+- Confirm `employeehub` database exists

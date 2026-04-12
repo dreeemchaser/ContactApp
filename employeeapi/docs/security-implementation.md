@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document covers adding JWT (JSON Web Token) based authentication to the Contact API using Spring Security. By the end of this implementation, all contact endpoints will be protected — only users who have registered and logged in with a valid token will be able to access them.
+This document covers the JWT (JSON Web Token) based authentication implemented in the Employee API using Spring Security. All endpoints except `/auth/register` and `/auth/login` are protected — only users who have registered and logged in with a valid token can access them.
 
 ### What is JWT?
 
@@ -41,7 +41,7 @@ You are adding:
 2. A `/auth/register` endpoint to create new users
 3. A `/auth/login` endpoint that returns a JWT token
 4. A filter that intercepts every request, reads the token, and authenticates the user
-5. Security rules that protect all contact endpoints behind authentication
+5. Security rules that protect all employee endpoints behind authentication
 
 ---
 
@@ -307,7 +307,7 @@ Authorisation rules:
   → Permit all: GET /actuator/health
   → Permit all: GET /swagger-ui/**
   → Permit all: GET /v3/api-docs/**
-  → All other requests → authenticated
+  → All other requests → authenticated (role-based rules per endpoint)
 
 Add JwtAuthenticationFilter before UsernamePasswordAuthenticationFilter
   → Your filter runs first, sets the authentication context
@@ -333,7 +333,7 @@ Also ensure the `Authorization` header is in the allowed headers list — browse
 ### Update `config/Config.java`
 
 ```
-allowedOrigins  → "http://localhost:3000" (your frontend URL)
+allowedOrigins  → "http://localhost:3000", "http://localhost:3001" (frontend URLs)
 allowedMethods  → "GET", "POST", "PUT", "DELETE", "OPTIONS"
 allowedHeaders  → "Authorization", "Content-Type"
 allowCredentials → true
@@ -385,8 +385,8 @@ Apply it globally using `addSecurityItem` so every endpoint in Swagger UI shows 
 3. Call `POST /auth/login` with the same credentials — copy the token from the response
 4. Click the **Authorize** button (top right of Swagger UI)
 5. Enter `Bearer <your-token>` and click Authorize
-6. Now test any contact endpoint — it should return data
-7. Try a contact endpoint without authorizing — it should return `401`
+6. Now test any employee endpoint — it should return data
+7. Try an employee endpoint without authorizing — it should return `401`
 
 ### Manual Testing via curl
 
@@ -402,11 +402,11 @@ curl -X POST http://localhost:8080/auth/login \
   -d '{"username": "admin", "password": "password123"}'
 
 # Access protected endpoint with token
-curl http://localhost:8080/contacts \
+curl http://localhost:8080/employees \
   -H "Authorization: Bearer <your-token>"
 
 # Access without token — should return 401
-curl http://localhost:8080/contacts
+curl http://localhost:8080/employees
 ```
 
 ---

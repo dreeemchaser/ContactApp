@@ -1,3 +1,0 @@
-Source Code:
-ReactJS: https://github.com/getarrays/contactapp
-Spring Boot: https://github.com/getarrays/contactapi

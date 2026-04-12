@@ -2,65 +2,77 @@
 
 ## Overview
 
-The Contact API is a RESTful web service built with Spring Boot 3.5.13, Java 25, and PostgreSQL database. It follows a layered architecture pattern with clear separation of concerns.
+The Employee API is a RESTful web service built with Spring Boot 3.5.13, Java 25, and PostgreSQL. It follows a layered architecture with clear separation of concerns and JWT-based role-based access control.
 
 ## Layers
 
 ### Presentation Layer
-- `ContactController`: REST controller handling HTTP requests and responses for contact management operations.
+Controllers handle HTTP requests and responses, grouped by domain module:
+- `AuthController` — registration and login
+- `EmployeeController` — employee CRUD and photo upload
+- `DepartmentController`, `TeamController` — organisation structure
+- `LeaveController`, `TimesheetController` — workforce management
+- `SalaryController`, `BenefitController` — compensation
+- `PerformanceController`, `DocumentController` — employee development
+- `NotificationController`, `AuditLogController` — system
 
 ### Service Layer
-- `ContactService`: Business logic layer containing contact management operations, photo upload handling, and data validation.
+Business logic per module: `EmployeeService`, `LeaveService`, `SalaryService`, `TimesheetService`, `BenefitService`, `PerformanceService`, `DocumentService`, `NotificationService`, `AuditService`, etc.
 
 ### Repository Layer
-- `ContactRepository`: JPA repository interface extending `JpaRepository<Contact, String>` for data access operations.
+JPA repositories extending `JpaRepository` for each domain entity.
 
 ### Domain Layer
-- `Contact`: JPA entity representing a contact with all necessary fields and relationships.
+JPA entities representing the full HR data model. See [../../docs/data-model-uml.md](../../docs/data-model-uml.md) for the full UML diagram.
+
+### Security Layer
+- `JwtAuthFilter` — intercepts every request and validates the Bearer token
+- `JwtUtil` — token generation, parsing, and validation
+- `SecurityConfig` — role-based access rules per endpoint
+- `UserDetailsServiceImpl` — loads employees from DB for Spring Security
 
 ## Technologies
 
 - **Framework**: Spring Boot 3.5.13
 - **Language**: Java 25
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL 15
 - **ORM**: JPA/Hibernate
+- **Security**: Spring Security + JJWT
 - **Build Tool**: Maven
-- **Utilities**: Lombok for boilerplate reduction
+- **Utilities**: Lombok
 - **Monitoring**: Spring Boot Actuator
 
-## Data Model
+## Key Domain Entities
 
-The `Contact` entity has the following attributes:
-- `id`: UUID primary key (auto-generated)
-- `name`: String (contact's full name)
-- `email`: String (unique email address)
-- `title`: String (job title)
-- `phone`: String (phone number)
-- `address`: String (physical address)
-- `status`: String (contact status: active/inactive)
-- `photoURL`: String (URL to contact's photo)
+| Module | Entities |
+|--------|----------|
+| Organisation | Department, Team |
+| Employee | Employee |
+| Leave | LeaveType, LeaveBalance, LeaveRequest |
+| Salary | SalaryRecord, PaySlip, TaxBracket, SalaryIncreaseRequest |
+| Benefits | BenefitType, EmployeeBenefit, BenefitApplication |
+| Timesheets | Timesheet, TimesheetEntry |
+| Performance | PerformanceCycle, PerformanceReview, PerformanceGoal |
+| Documents | Document |
+| System | AuditLog, Notification |
 
 ## Configuration
 
-Application configuration is managed through `application.yml` with the following key settings:
+Application configuration is managed through `application.yml`:
 - Database connection (PostgreSQL)
 - JPA/Hibernate settings
-- File upload limits (1GB max)
+- File upload limits
 - Server port (8080)
-- Async request timeout (1 hour)
+- JWT secret and expiration
 
 ## File Storage
 
-Photos are stored locally in the `PHOTO_DIRECTORY` with secure filename generation. For production deployments, consider migrating to cloud storage solutions like AWS S3 or Azure Blob Storage.
+Photos are stored locally in the `PHOTO_DIRECTORY`. For production deployments, consider migrating to cloud storage such as AWS S3.
 
 ## Error Handling
 
-The application implements basic error handling with custom exceptions and proper HTTP status codes. Global exception handling should be enhanced for production use.
+Global exception handling via `GlobalExceptionHandler` with consistent `ApiResponse<T>` wrapper and proper HTTP status codes.
 
-## Security Considerations
+## Security
 
-- No authentication/authorization implemented (see [Security](security.md))
-- File uploads require validation and secure storage
-- Input validation using Bean Validation annotations
-- HTTPS should be enabled in production
-- CORS configuration needed for web clients
+JWT authentication with role-based access control. Roles: `EMPLOYEE`, `MANAGER`, `HR_ADMIN`, `PAYROLL_ADMIN`, `SUPER_ADMIN`. See [security.md](security.md) for details.

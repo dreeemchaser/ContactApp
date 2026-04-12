@@ -1,19 +1,32 @@
-# ContactApp — React Frontend
+# EmployeeHub — React Frontend
 
-React frontend for the ContactApp project, built with Create React App and served via Nginx in Docker.
+React frontend for the EmployeeHub HR management system, built with Create React App and served via Nginx in Docker.
 
 ## Project Structure
 
 ```
-contactapp/
+employeehub/
 ├── src/
 │   ├── api/
-│   │   └── ContactService.js   # Axios API calls to backend
+│   │   ├── AuthService.js      # Auth API calls (login, register)
+│   │   └── ContactService.js   # Employee API calls to backend
 │   ├── components/
-│   │   ├── Contact.jsx
-│   │   ├── ContactDetails.jsx
-│   │   ├── ContactList.jsx
-│   │   └── Header.jsx
+│   │   ├── EmployeeCard.jsx
+│   │   ├── Header.jsx
+│   │   ├── LoginPage.jsx
+│   │   ├── Sidebar.jsx
+│   │   ├── Spinner.jsx
+│   │   └── TopBar.jsx
+│   ├── pages/
+│   │   ├── DashboardPage.jsx
+│   │   ├── EmployeesPage.jsx
+│   │   ├── EmployeeDetailsPage.jsx
+│   │   ├── LeavePage.jsx
+│   │   ├── TimesheetsPage.jsx
+│   │   ├── SalaryPage.jsx
+│   │   ├── BenefitsPage.jsx
+│   │   ├── PerformancePage.jsx
+│   │   └── DocumentsPage.jsx
 │   ├── App.js
 │   └── index.js
 ├── public/
@@ -56,19 +69,6 @@ In Docker, this is injected at build time via `docker-compose.yml`:
 args:
   REACT_APP_API_URL: http://localhost:8080
 ```
-
-## API Integration
-
-All backend calls are in `src/api/ContactService.js`:
-
-| Function | Method | Endpoint |
-|----------|--------|----------|
-| `getContacts(page, size)` | GET | `/contacts?page=&size=` |
-| `getContact(id)` | GET | `/contacts/{id}` |
-| `saveContact(contact)` | POST | `/contacts` |
-| `updateContact(contact)` | POST | `/contacts` |
-| `updatePhoto(formData)` | PUT | `/contacts/photo` |
-| `deleteContact(id)` | DELETE | `/contacts/{id}` |
 
 ## Available Scripts
 

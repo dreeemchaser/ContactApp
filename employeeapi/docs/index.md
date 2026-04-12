@@ -1,6 +1,6 @@
-# Contact API Documentation
+# Employee API Documentation
 
-Spring Boot REST API for managing contacts with photo upload capabilities.
+Spring Boot REST API for the EmployeeHub HR management system.
 
 ## Table of Contents
 
@@ -29,17 +29,25 @@ docker-compose up --build
 ### Without Docker
 
 ```bash
-cd contactapi
+cd employeeapi
 ./mvnw spring-boot:run
 ```
 
-Requires PostgreSQL running locally on port 5432 with a `contactapi` database.
+Requires PostgreSQL running locally on port 5432 with an `employeehub` database.
 
 ## Key Features
 
-- Full CRUD operations for contacts
-- Photo upload and retrieval
-- Paginated contact listing (`content` + `page` metadata)
+- Full CRUD operations for employees
+- Profile photo upload and retrieval
+- Leave management with approval workflows
+- Timesheet submission and approval
+- Salary records, payslip generation, and SA PAYE/UIF tax calculation
+- Benefits catalogue and employee applications
+- Performance cycles, goals, and reviews
+- Document upload and HR verification
+- Real-time notifications
+- Audit trail
+- JWT-based authentication with role-based access control
 - Environment variable driven configuration
 - Swagger/OpenAPI documentation
 - Spring Boot Actuator for monitoring

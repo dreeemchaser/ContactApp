@@ -33,11 +33,14 @@ fi
 echo ""
 echo "Verifying project structure..."
 files=(
-    "contactapi/Dockerfile"
-    "contactapi/pom.xml"
-    "contactapp/Dockerfile"
-    "contactapp/nginx.conf"
-    "contactapp/package.json"
+    "employeeapi/Dockerfile"
+    "employeeapi/pom.xml"
+    "employeehub/Dockerfile"
+    "employeehub/nginx.conf"
+    "employeehub/package.json"
+    "hrdashboard/Dockerfile"
+    "hrdashboard/nginx.conf"
+    "hrdashboard/package.json"
     "docker-compose.yml"
 )
 
@@ -52,7 +55,7 @@ done
 # Check ports
 echo ""
 echo "Checking if required ports are available..."
-ports=(3000 5432 8080)
+ports=(3000 3001 5432 8080)
 for port in "${ports[@]}"; do
     if ! nc -z localhost $port 2>/dev/null; then
         echo -e "  ${GREEN}✓${NC} Port $port is available"
@@ -68,4 +71,5 @@ echo "Next steps:"
 echo "  1. Run: docker-compose build"
 echo "  2. Run: docker-compose up"
 echo "  3. Access frontend at http://localhost:3000"
-echo "  4. Access API at http://localhost:8080"
+echo "  4. Access HR dashboard at http://localhost:3001"
+echo "  5. Access API at http://localhost:8080"

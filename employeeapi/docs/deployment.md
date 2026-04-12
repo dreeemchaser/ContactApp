@@ -14,11 +14,12 @@ The recommended way to run the full stack is via Docker Compose from the project
 docker-compose up --build
 ```
 
-| Service   | URL |
-|-----------|-----|
-| Frontend  | http://localhost:3000 |
-| API       | http://localhost:8080 |
-| Swagger   | http://localhost:8080/swagger-ui.html |
+| Service       | URL |
+|---------------|-----|
+| Frontend      | http://localhost:3000 |
+| HR Dashboard  | http://localhost:3001 |
+| API           | http://localhost:8080 |
+| Swagger       | http://localhost:8080/swagger-ui.html |
 
 ### Stop Services
 
@@ -54,13 +55,14 @@ docker-compose logs -f db
 
 ```
 frontend (Nginx:3000) → api (Spring Boot:8080) → db (PostgreSQL:5432)
+hrdashboard (Nginx:3001) ↗
 ```
 
 All services communicate over the `docker-net` bridge network. Service names resolve as DNS hostnames inside containers (e.g. `http://api:8080`).
 
 ### Volumes
 - `postgres_data` — persists PostgreSQL data
-- `contact_photos` — persists uploaded contact photos at `/app/photos/`
+- `employee_photos` — persists uploaded employee photos at `/app/photos/`
 
 ---
 
@@ -70,10 +72,11 @@ Configured in `docker-compose.yml`. Key variables:
 
 | Variable | Value in Docker |
 |----------|----------------|
-| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://db:5432/contactapi` |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://db:5432/employeehub` |
 | `SPRING_DATASOURCE_USERNAME` | `admin` |
 | `SPRING_DATASOURCE_PASSWORD` | `administrator` |
 | `PHOTO_DIRECTORY` | `/app/photos/` |
+| `JWT_SECRET` | (set in docker-compose or env) |
 | `REACT_APP_API_URL` | `http://localhost:8080` (build arg) |
 
 ---
@@ -82,17 +85,25 @@ Configured in `docker-compose.yml`. Key variables:
 
 ### Backend
 
-1. Ensure PostgreSQL is running locally on port 5432 with a `contactapi` database
+1. Ensure PostgreSQL is running locally on port 5432 with an `employeehub` database
 2. Run:
    ```bash
-   cd contactapi
+   cd employeeapi
    ./mvnw spring-boot:run
    ```
 
 ### Frontend
 
 ```bash
-cd contactapp
+cd employeehub
+npm install
+npm start
+```
+
+### HR Dashboard
+
+```bash
+cd hrdashboard
 npm install
 npm start
 ```
@@ -104,9 +115,9 @@ npm start
 ## Building the Backend JAR
 
 ```bash
-cd contactapi
+cd employeeapi
 ./mvnw clean package -DskipTests
-java -jar target/contactapi-0.0.1-SNAPSHOT.jar
+java -jar target/employeeapi-0.0.1-SNAPSHOT.jar
 ```
 
 ---
@@ -117,6 +128,7 @@ java -jar target/contactapi-0.0.1-SNAPSHOT.jar
 ```bash
 lsof -i :8080
 lsof -i :3000
+lsof -i :3001
 ```
 
 **API not starting (DB not ready):**  
@@ -133,5 +145,5 @@ docker-compose up --build
 
 **Access PostgreSQL directly:**
 ```bash
-docker exec -it contactapp-db psql -U admin -d contactapi
+docker exec -it employeehub-db psql -U admin -d employeehub
 ```

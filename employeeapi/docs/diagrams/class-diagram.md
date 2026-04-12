@@ -6,65 +6,76 @@ classDiagram
         +main(String[] args)
     }
 
-    class Contact {
-        -String id
-        -String name
+    class Employee {
+        -UUID id
+        -String employeeNumber
+        -String firstName
+        -String lastName
         -String email
-        -String title
-        -String phone
-        -String address
-        -String status
-        -String photoURL
+        -String jobTitle
+        -EmploymentType employmentType
+        -EmploymentStatus employmentStatus
+        -Role role
+        -String profilePhoto
+        -UUID departmentId
+        -UUID teamId
+        -UUID managerId
         +getId()
-        +setId(String)
-        +getName()
-        +setName(String)
         +getEmail()
-        +setEmail(String)
-        +getTitle()
-        +setTitle(String)
-        +getPhone()
-        +setPhone(String)
-        +getAddress()
-        +setAddress(String)
-        +getStatus()
-        +setStatus(String)
-        +getPhotoURL()
-        +setPhotoURL(String)
+        +getRole()
+        +getEmploymentStatus()
     }
 
-    class ContactRepository {
-        +findAll(Pageable) Page~Contact~
-        +findById(String) Optional~Contact~
-        +findByEmail(String) Optional~Contact~
-        +save(Contact) Contact
-        +deleteById(String)
-        +existsById(String) boolean
-        +count() long
+    class EmployeeRepository {
+        +findAll(Pageable) Page~Employee~
+        +findById(UUID) Optional~Employee~
+        +findByEmail(String) Optional~Employee~
+        +save(Employee) Employee
+        +deleteById(UUID)
     }
 
-    class ContactService {
-        -ContactRepository contactRepository
-        +getAllContacts(int, int) Page~Contact~
-        +getContact(String) Contact
-        +createContact(Contact) Contact
-        +deleteContact(Contact)
-        +uploadPhoto(String, MultipartFile) String
+    class EmployeeService {
+        -EmployeeRepository employeeRepository
+        +getAllEmployees(int, int) Page~Employee~
+        +getEmployee(UUID) Employee
+        +createEmployee(EmployeeRequest) Employee
+        +updateEmployee(UUID, EmployeeRequest) Employee
+        +uploadPhoto(UUID, MultipartFile) String
     }
 
-    class ContactController {
-        -ContactService contactService
-        +createContact(Contact) ResponseEntity~Contact~
-        +getContacts(int, int) ResponseEntity~Page~Contact~~
-        +getContact(String) ResponseEntity~Contact~
-        +uploadPhoto(String, MultipartFile) ResponseEntity~String~
-        +getPhoto(String) byte[]
+    class EmployeeController {
+        -EmployeeService employeeService
+        +createEmployee(EmployeeRequest) ResponseEntity~Employee~
+        +getEmployees(int, int) ResponseEntity~Page~Employee~~
+        +getEmployee(UUID) ResponseEntity~Employee~
+        +uploadPhoto(UUID, MultipartFile) ResponseEntity~String~
     }
 
-    Application --> ContactService
-    ContactService --> ContactRepository
-    ContactRepository --> Contact
-    ContactController --> ContactService
+    class AuthController {
+        -AuthenticationManager authManager
+        -JwtUtil jwtUtil
+        +register(RegisterRequest) ResponseEntity~AuthResponse~
+        +login(LoginRequest) ResponseEntity~AuthResponse~
+    }
+
+    class JwtUtil {
+        +generateToken(UserDetails) String
+        +extractUsername(String) String
+        +isTokenValid(String, UserDetails) boolean
+    }
+
+    class SecurityConfig {
+        +securityFilterChain(HttpSecurity) SecurityFilterChain
+        +passwordEncoder() BCryptPasswordEncoder
+        +authenticationManager() AuthenticationManager
+    }
+
+    Application --> EmployeeService
+    EmployeeService --> EmployeeRepository
+    EmployeeRepository --> Employee
+    EmployeeController --> EmployeeService
+    AuthController --> JwtUtil
+    SecurityConfig --> JwtUtil
 ```
 
-This diagram shows the main classes and their relationships in the Contact API application. The application uses Spring Boot's dependency injection to wire the components together. The `Contact` entity is annotated with JPA annotations for database persistence, while the `ContactRepository` extends `JpaRepository` for data access operations. The `ContactService` contains business logic, and the `ContactController` handles HTTP requests and responses.
+This diagram shows the core classes and their relationships in the Employee API. The application uses Spring Boot's dependency injection to wire components together. The `Employee` entity is annotated with JPA annotations for database persistence. `JwtUtil` and `SecurityConfig` handle authentication and authorization.

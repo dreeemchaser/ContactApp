@@ -11,48 +11,39 @@ Interactive API documentation is available via SpringDoc OpenAPI.
 | OpenAPI JSON | http://localhost:8080/v3/api-docs |
 | OpenAPI YAML | http://localhost:8080/v3/api-docs.yaml |
 
+## Authentication
+
+All endpoints (except `/auth/register` and `/auth/login`) require a JWT token.
+
+1. Call `POST /auth/login` to obtain a token
+2. Click the **Authorize** button (top right of Swagger UI)
+3. Enter `Bearer <your-token>` and click Authorize
+
 ## Testing Endpoints
 
-### Create a Contact
+### Register & Login
 
 1. Open http://localhost:8080/swagger-ui.html
-2. Find `POST /contacts` → click **Try it out**
+2. Find `POST /auth/register` → click **Try it out**
 3. Enter request body:
    ```json
    {
-     "name": "Jane Doe",
-     "email": "jane@example.com",
-     "phone": "555-9876",
-     "title": "Designer",
-     "address": "456 Elm St",
-     "status": "active"
+     "username": "admin@example.com",
+     "password": "password123"
    }
    ```
-4. Click **Execute**
+4. Find `POST /auth/login` with the same credentials — copy the token from the response
+5. Click **Authorize** and enter `Bearer <token>`
 
-### Get All Contacts
+### Get All Employees
 
-1. Find `GET /contacts` → click **Try it out**
-2. Set `page: 0`, `size: 10`
-3. Click **Execute**
+1. Find `GET /employees` → click **Try it out**
+2. Click **Execute**
 
-Response includes `content` array and `page` metadata:
-```json
-{
-  "content": [...],
-  "page": {
-    "size": 10,
-    "number": 0,
-    "totalElements": 6,
-    "totalPages": 1
-  }
-}
-```
+### Upload an Employee Photo
 
-### Upload a Photo
-
-1. Find `PUT /contacts/photo` → click **Try it out**
-2. Enter the contact `id` (UUID from a previous create)
+1. Find `PUT /employees/{id}/photo` → click **Try it out**
+2. Enter the employee `id` (UUID)
 3. Select an image file
 4. Click **Execute**
 
@@ -80,10 +71,14 @@ springdoc:
 ## Troubleshooting
 
 **Swagger UI returns 404:**
-- Confirm the API is running: `curl http://localhost:8080/contacts`
+- Confirm the API is running: `curl http://localhost:8080/actuator/health`
 - Check API logs: `docker-compose logs api`
 - Rebuild if needed: `docker-compose up --build`
 
 **Endpoints not showing:**
 - Swagger auto-scans on startup — no manual registration needed
 - Rebuild after adding new controllers
+
+**401 on protected endpoints:**
+- Ensure you have clicked **Authorize** and entered a valid `Bearer <token>`
+- Tokens expire after 24 hours — re-login to get a fresh token

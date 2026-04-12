@@ -2,12 +2,55 @@
 
 Base URL: `http://localhost:8080`
 
-> No authentication is currently implemented. All endpoints are open.
+> All endpoints require `Authorization: Bearer <token>` unless marked `[PUBLIC]`.  
+> See [../../docs/api-contract.md](../../docs/api-contract.md) for the full API contract.
 
-## Endpoints
+## Authentication
 
-### GET /contacts
-Retrieve a paginated list of contacts.
+### POST /auth/register `[PUBLIC]`
+Register a new user.
+
+**Request Body:**
+```json
+{
+  "username": "jane@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "token": "eyJhbGci...",
+  "username": "jane@example.com"
+}
+```
+
+### POST /auth/login `[PUBLIC]`
+Login and receive a JWT token.
+
+**Request Body:**
+```json
+{
+  "username": "jane@example.com",
+  "password": "password123"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "token": "eyJhbGci...",
+  "username": "jane@example.com"
+}
+```
+
+---
+
+## Employees
+
+### GET /employees
+Get all employees (paginated).
 
 **Query Parameters:**
 - `page` (optional): Page number, 0-indexed (default: `0`)
@@ -19,96 +62,46 @@ Retrieve a paginated list of contacts.
   "content": [
     {
       "id": "uuid-string",
-      "name": "John Doe",
-      "email": "john@example.com",
-      "title": "Software Engineer",
-      "phone": "+1-555-123-4567",
-      "address": "123 Main St",
-      "status": "active",
-      "photoURL": "john_doe_photo.jpg"
+      "employeeNumber": "EMP-001",
+      "firstName": "Jane",
+      "lastName": "Doe",
+      "email": "jane@example.com",
+      "jobTitle": "Software Engineer",
+      "employmentStatus": "ACTIVE",
+      "departmentId": "uuid-string",
+      "teamId": "uuid-string"
     }
   ],
   "page": {
     "size": 10,
     "number": 0,
-    "totalElements": 6,
-    "totalPages": 1
+    "totalElements": 25,
+    "totalPages": 3
   }
 }
 ```
 
-> Note: Pagination metadata is nested under the `page` key. Access total count via `response.data.page.totalElements`.
+### GET /employees/{id}
+Get a single employee by ID.
 
----
+**Response (200 OK):** Employee object  
+**Response (404 Not Found):** Employee not found
 
-### GET /contacts/{id}
-Retrieve a single contact by ID.
+### POST /employees
+Create a new employee. Requires `HR_ADMIN` or `SUPER_ADMIN` role.
 
-**Path Parameters:**
-- `id`: Contact UUID
+### PUT /employees/{id}
+Update an employee. Requires `HR_ADMIN` or `SUPER_ADMIN` role.
 
-**Response (200 OK):** Contact object  
-**Response (404 Not Found):** Contact not found
-
----
-
-### POST /contacts
-Create a new contact.
-
-**Request Body:**
-```json
-{
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "title": "Developer",
-  "phone": "098-765-4321",
-  "address": "456 Elm St",
-  "status": "active"
-}
-```
-
-**Response (201 Created):** Created contact object with generated UUID  
-**Response (400 Bad Request):** Invalid input
-
----
-
-### PUT /contacts/photo
-Upload or update a photo for an existing contact.
+### PUT /employees/{id}/photo
+Upload an employee profile photo.
 
 **Form Parameters (multipart/form-data):**
-- `id`: Contact UUID
 - `file`: Image file (JPEG, PNG, GIF)
 
-**Response (200 OK):** Photo URL string  
-**Response (404 Not Found):** Contact not found
+**Response (200 OK):** Photo URL string
 
 ---
-
-### GET /contacts/image/{filename}
-Retrieve a contact's photo.
-
-**Path Parameters:**
-- `filename`: Photo filename
-
-**Response (200 OK):** Image binary (JPEG/PNG/GIF)  
-**Response (404 Not Found):** Photo not found
-
----
-
-## Contact Object
-
-```json
-{
-  "id": "string (UUID, auto-generated)",
-  "name": "string (required)",
-  "email": "string (required, unique)",
-  "title": "string (optional)",
-  "phone": "string (optional)",
-  "address": "string (optional)",
-  "status": "string (optional)",
-  "photoURL": "string (set after photo upload)"
-}
-```
 
 ## Error Responses
 
@@ -117,7 +110,10 @@ Retrieve a contact's photo.
   "timestamp": "2024-01-01T12:00:00.000+00:00",
   "status": 404,
   "error": "Not Found",
-  "message": "Contact not found",
-  "path": "/contacts/uuid"
+  "message": "Employee not found",
+  "path": "/employees/uuid"
 }
 ```
+
+**401 Unauthorized** — missing or invalid JWT token  
+**403 Forbidden** — authenticated but insufficient role

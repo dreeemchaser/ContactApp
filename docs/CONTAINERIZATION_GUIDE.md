@@ -1,14 +1,15 @@
 # Containerization Guide
 
-This guide documents the Docker setup for the ContactApp full stack.
+This guide documents the Docker setup for the EmployeeHub full stack.
 
 ## Architecture
 
 ```
 frontend (Nginx:3000) → api (Spring Boot:8080) → db (PostgreSQL:5432)
+hrdashboard (Nginx:3001) ↗
 ```
 
-All three services run on the `docker-net` bridge network. Service names resolve as internal DNS hostnames.
+All services run on the `docker-net` bridge network. Service names resolve as internal DNS hostnames.
 
 ## Services
 
@@ -17,38 +18,50 @@ All three services run on the `docker-net` bridge network. Service names resolve
 - Image: `postgres:15-alpine`
 - Port: `5432`
 - Volume: `postgres_data` → `/var/lib/postgresql/data`
-- Health check: `pg_isready -U admin -d contactapi`
+- Health check: `pg_isready -U admin -d employeehub`
 
 ### api — Spring Boot
 
-- Built from `contactapi/Dockerfile` (multi-stage: Maven builder + JRE Alpine runtime)
+- Built from `employeeapi/Dockerfile` (multi-stage: Maven builder + JRE Alpine runtime)
 - Port: `8080`
-- Volume: `contact_photos` → `/app/photos/`
+- Volume: `employee_photos` → `/app/photos/`
 - Depends on: `db` (waits for health check)
-- Health check: `wget http://localhost:8080/contacts`
+- Health check: `wget http://localhost:8080/actuator/health`
 
 ### frontend — React + Nginx
 
-- Built from `contactapp/Dockerfile` (multi-stage: Node builder + Nginx runtime)
+- Built from `employeehub/Dockerfile` (multi-stage: Node builder + Nginx runtime)
 - Port: `3000`
 - Depends on: `api` (waits for health check)
 - Health check: `wget http://127.0.0.1:3000/health`
 - `REACT_APP_API_URL` is injected at build time as a Docker build arg
 
+### dashboard — React + Nginx
+
+- Built from `hrdashboard/Dockerfile` (multi-stage: Node builder + Nginx runtime)
+- Port: `3001`
+- Depends on: `api` (waits for health check)
+- Health check: `wget http://127.0.0.1:3001/health`
+- `REACT_APP_API_URL` is injected at build time as a Docker build arg
+
 ## Dockerfiles
 
-### Backend (`contactapi/Dockerfile`)
+### Backend (`employeeapi/Dockerfile`)
 
 Multi-stage build:
 1. Stage 1 (`builder`): Maven compiles and packages the JAR
 2. Stage 2: Eclipse Temurin JRE Alpine runs the JAR
 
-### Frontend (`contactapp/Dockerfile`)
+### Frontend (`employeehub/Dockerfile`)
 
 Multi-stage build:
 1. Stage 1 (`builder`): Node 20 Alpine installs deps and runs `npm run build`
    - Accepts `REACT_APP_API_URL` as a build arg
 2. Stage 2: Nginx Alpine serves the production build
+
+### HR Dashboard (`hrdashboard/Dockerfile`)
+
+Same pattern as the frontend build.
 
 ## Key Configuration
 
@@ -68,8 +81,8 @@ In Docker, `docker-compose.yml` sets `PHOTO_DIRECTORY: /app/photos/`.
 `ContactService.js` reads `REACT_APP_API_URL` at runtime:
 ```js
 const API_URL = process.env.REACT_APP_API_URL
-    ? `${process.env.REACT_APP_API_URL}/contacts`
-    : 'http://localhost:8080/contacts';
+    ? `${process.env.REACT_APP_API_URL}/employees`
+    : 'http://localhost:8080/employees';
 ```
 
 This is injected at build time via `docker-compose.yml`:
@@ -101,10 +114,10 @@ docker-compose logs -f api
 docker-compose build api
 
 # Access PostgreSQL
-docker exec -it contactapp-db psql -U admin -d contactapi
+docker exec -it employeehub-db psql -U admin -d employeehub
 
 # Access API container shell
-docker exec -it contactapp-api sh
+docker exec -it employeehub-api sh
 ```
 
 ## Volumes
@@ -112,7 +125,7 @@ docker exec -it contactapp-api sh
 | Volume | Purpose |
 |--------|---------|
 | `postgres_data` | Persists PostgreSQL database across restarts |
-| `contact_photos` | Persists uploaded contact photos |
+| `employee_photos` | Persists uploaded employee profile photos |
 
 ## Troubleshooting
 
@@ -133,6 +146,7 @@ docker-compose up --build
 ```bash
 lsof -i :8080
 lsof -i :3000
+lsof -i :3001
 lsof -i :5432
 ```
 

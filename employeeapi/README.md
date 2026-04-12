@@ -1,6 +1,6 @@
-# Contact API
+# Employee API
 
-Spring Boot REST API for managing contacts with photo upload, backed by PostgreSQL.
+Spring Boot REST API for the EmployeeHub HR management system, backed by PostgreSQL.
 
 ## Tech Stack
 
@@ -12,28 +12,41 @@ Spring Boot REST API for managing contacts with photo upload, backed by PostgreS
 | Database | PostgreSQL 15 |
 | Build Tool | Maven |
 | Utilities | Lombok |
+| Security | Spring Security + JWT |
 | API Docs | SpringDoc OpenAPI (Swagger) |
 
 ## Project Structure
 
 ```
-contactapi/
-├── src/main/java/contactapi/
+employeeapi/
+├── src/main/java/employeehub/
 │   ├── Application.java
 │   ├── config/
 │   │   ├── Config.java                  # CORS configuration
+│   │   ├── DataSeeder.java              # Seed data on startup
 │   │   └── OpenApiConfiguration.java    # Swagger setup
 │   ├── constant/
 │   │   └── Constant.java                # PHOTO_DIRECTORY, headers
 │   ├── controller/
-│   │   ├── ContactController.java       # REST endpoints
-│   │   └── HealthController.java        # Health check endpoint
-│   ├── domain/
-│   │   └── Contact.java                 # JPA entity
-│   ├── repository/
-│   │   └── ContactRepository.java       # JPA repository
-│   └── service/
-│       └── ContactService.java          # Business logic
+│   │   ├── AuthController.java          # /auth endpoints
+│   │   ├── EmployeeController.java      # /employees endpoints
+│   │   ├── DepartmentController.java
+│   │   ├── TeamController.java
+│   │   ├── LeaveController.java
+│   │   ├── SalaryController.java
+│   │   ├── BenefitController.java
+│   │   ├── TimesheetController.java
+│   │   ├── PerformanceController.java
+│   │   ├── DocumentController.java
+│   │   ├── NotificationController.java
+│   │   ├── AuditLogController.java
+│   │   └── HealthController.java
+│   ├── domain/                          # JPA entities and enums
+│   ├── dto/                             # Request/response DTOs
+│   ├── exception/                       # Global exception handler
+│   ├── repository/                      # JPA repositories
+│   ├── security/                        # JWT filter, SecurityConfig
+│   └── service/                         # Business logic
 ├── src/main/resources/
 │   └── application.yml                  # Config with env var support
 ├── docs/                                # API and architecture docs
@@ -54,42 +67,65 @@ Swagger UI: **http://localhost:8080/swagger-ui.html**
 
 ## Running Locally
 
-1. Ensure PostgreSQL is running with a `contactapi` database
+1. Ensure PostgreSQL is running with an `employeehub` database
 2. Update credentials in `src/main/resources/application.yml` if needed
 3. Run:
    ```bash
    ./mvnw spring-boot:run
    ```
 
-## API Endpoints
+## API Overview
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/contacts` | List contacts (paginated) |
-| GET | `/contacts/{id}` | Get single contact |
-| POST | `/contacts` | Create contact |
-| PUT | `/contacts/photo` | Upload contact photo |
-| GET | `/contacts/image/{filename}` | Get contact photo |
+See [docs/api.md](docs/api.md) and the project-level [docs/api-contract.md](../docs/api-contract.md) for the full API reference.
 
-See [docs/api.md](docs/api.md) for full request/response details.
+| Module | Base Path |
+|--------|-----------|
+| Auth | `/auth` |
+| Employees | `/employees` |
+| Departments | `/departments` |
+| Teams | `/teams` |
+| Leave | `/leave` |
+| Salary | `/salary` |
+| Benefits | `/benefits` |
+| Timesheets | `/timesheets` |
+| Performance | `/performance` |
+| Documents | `/documents` |
+| Notifications | `/notifications` |
+| Audit Log | `/audit-logs` |
+
+## Authentication
+
+All endpoints require `Authorization: Bearer <token>` except `/auth/register` and `/auth/login`.
+
+```bash
+# Register
+curl -X POST http://localhost:8080/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin@example.com", "password": "password123"}'
+
+# Login — copy the token
+curl -X POST http://localhost:8080/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin@example.com", "password": "password123"}'
+```
 
 ## Environment Variables
 
-All config is driven by environment variables with local fallback defaults:
-
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `SPRING_DATASOURCE_URL` | PostgreSQL URL | `jdbc:postgresql://localhost:5432/contactapi` |
+| `SPRING_DATASOURCE_URL` | PostgreSQL URL | `jdbc:postgresql://localhost:5432/employeehub` |
 | `SPRING_DATASOURCE_USERNAME` | DB username | `admin` |
 | `SPRING_DATASOURCE_PASSWORD` | DB password | `administrator` |
 | `PHOTO_DIRECTORY` | Photo storage path | `~/downloads/uploads/` |
 | `SERVER_PORT` | Server port | `8080` |
+| `JWT_SECRET` | JWT signing secret | (see application.yml) |
+| `JWT_EXPIRATION` | Token expiry (ms) | `86400000` (24h) |
 | `SPRING_JPA_HIBERNATE_DDL_AUTO` | Hibernate DDL mode | `update` |
 
 ## Photo Storage
 
 Photos are stored at the path defined by `PHOTO_DIRECTORY`:
-- Docker: `/app/photos/` (mapped to `contact_photos` volume)
+- Docker: `/app/photos/` (mapped to `employee_photos` volume)
 - Local: `~/downloads/uploads/`
 
 ## Building
@@ -99,7 +135,7 @@ Photos are stored at the path defined by `PHOTO_DIRECTORY`:
 ./mvnw clean package -DskipTests
 
 # Run JAR directly
-java -jar target/contactapi-0.0.1-SNAPSHOT.jar
+java -jar target/employeeapi-0.0.1-SNAPSHOT.jar
 ```
 
 ## Documentation
