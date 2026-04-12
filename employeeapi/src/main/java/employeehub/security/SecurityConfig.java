@@ -48,6 +48,11 @@ public class SecurityConfig {
                         .requestMatchers("/employees/**")
                                 .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
 
+                        // Documents — HR_ADMIN manages, employees upload/view own
+                        .requestMatchers(HttpMethod.GET, "/documents").hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+                        .requestMatchers("/documents/{id}/verify", "/documents/{id}/reject")
+                                .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+
                         // Audit logs — HR_ADMIN / SUPER_ADMIN only
                         .requestMatchers("/audit-logs/**")
                                 .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
