@@ -1,13 +1,8 @@
 package employeehub.controller;
 
 import employeehub.domain.Employee;
-import employeehub.domain.enums.EmploymentStatus;
-import employeehub.domain.enums.EmploymentType;
-import employeehub.domain.enums.Role;
 import employeehub.dto.ApiResponse;
-import employeehub.repository.DepartmentRepository;
 import employeehub.repository.EmployeeRepository;
-import employeehub.repository.TeamRepository;
 import employeehub.security.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -31,48 +25,9 @@ import java.util.Map;
 public class AuthController {
 
     private final EmployeeRepository employeeRepository;
-    private final DepartmentRepository departmentRepository;
-    private final TeamRepository teamRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
-
-    @PostMapping("/register")
-    @Operation(summary = "Register a new employee (defaults to EMPLOYEE role)")
-    public ResponseEntity<ApiResponse<?>> register(@RequestBody Map<String, String> body) {
-        String email = body.get("email");
-        String password = body.get("password");
-        String firstName = body.get("firstName");
-        String lastName = body.get("lastName");
-
-        if (employeeRepository.existsByEmail(email)) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(ApiResponse.error("Email already registered"));
-        }
-
-        var department = departmentRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("No department found — seed one first"));
-        var team = teamRepository.findAll().stream().findFirst()
-                .orElseThrow(() -> new IllegalStateException("No team found — seed one first"));
-
-        Employee employee = new Employee();
-        employee.setFirstName(firstName);
-        employee.setLastName(lastName);
-        employee.setEmail(email);
-        employee.setPassword(passwordEncoder.encode(password));
-        employee.setJobTitle("Employee");
-        employee.setEmploymentType(EmploymentType.FULL_TIME);
-        employee.setEmploymentStatus(EmploymentStatus.ACTIVE);
-        employee.setStartDate(LocalDate.now());
-        employee.setRole(Role.EMPLOYEE);
-        employee.setDepartment(department);
-        employee.setTeam(team);
-        employee.setEmployeeNumber(generateEmployeeNumber());
-        employeeRepository.save(employee);
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(ApiResponse.ok("Employee registered successfully", null));
-    }
 
     @PostMapping("/login")
     @Operation(summary = "Login and receive a JWT token")
@@ -80,22 +35,26 @@ public class AuthController {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(body.get("email"), body.get("password"))
         );
-        Employee employee = employeeRepository.findByEmail(body.get("email"))
-                .orElseThrow();
+        Employee employee = employeeRepository.findByEmail(body.get("email")).orElseThrow();
         String token = jwtUtil.generateToken(employee.getEmail(), employee.getRole().name());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("token", token)));
     }
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated employee profile")
-    public ResponseEntity<ApiResponse<Employee>> me(@AuthenticationPrincipal UserDetails userDetails) {
-        Employee employee = employeeRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow();
-        return ResponseEntity.ok(ApiResponse.ok(employee));
-    }
-
-    private String generateEmployeeNumber() {
-        long count = employeeRepository.countAll() + 1;
-        return String.format("EMP-%03d", count);
+    public ResponseEntity<ApiResponse<Map<String, Object>>> me(@AuthenticationPrincipal UserDetails userDetails) {
+        Employee employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        Map<String, Object> profile = Map.ofEntries(
+                Map.entry("id", employee.getId()),
+                Map.entry("employeeNumber", employee.getEmployeeNumber()),
+                Map.entry("firstName", employee.getFirstName()),
+                Map.entry("lastName", employee.getLastName()),
+                Map.entry("email", employee.getEmail()),
+                Map.entry("jobTitle", employee.getJobTitle()),
+                Map.entry("role", employee.getRole()),
+                Map.entry("employmentStatus", employee.getEmploymentStatus()),
+                Map.entry("profilePhoto", employee.getProfilePhoto() != null ? employee.getProfilePhoto() : "")
+        );
+        return ResponseEntity.ok(ApiResponse.ok(profile));
     }
 }
