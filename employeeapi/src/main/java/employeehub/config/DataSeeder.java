@@ -1,7 +1,9 @@
 package employeehub.config;
 
+import employeehub.domain.BenefitType;
 import employeehub.domain.LeaveType;
 import employeehub.domain.TaxBracket;
+import employeehub.repository.BenefitTypeRepository;
 import employeehub.repository.LeaveTypeRepository;
 import employeehub.repository.TaxBracketRepository;
 import lombok.RequiredArgsConstructor;
@@ -18,11 +20,13 @@ public class DataSeeder implements ApplicationRunner {
 
     private final LeaveTypeRepository leaveTypeRepository;
     private final TaxBracketRepository taxBracketRepository;
+    private final BenefitTypeRepository benefitTypeRepository;
 
     @Override
     public void run(ApplicationArguments args) {
         seedLeaveTypes();
         seedTaxBrackets();
+        seedBenefitTypes();
     }
 
     private void seedLeaveTypes() {
@@ -56,6 +60,28 @@ public class DataSeeder implements ApplicationRunner {
                 taxBracket(2025, 1_817_001L,  null,        644_489L,    45.00, 17_235L)
         );
         taxBracketRepository.saveAll(brackets);
+    }
+
+    private void seedBenefitTypes() {
+        List.of(
+                benefitType("Medical Aid", "Company medical aid scheme", 1500.00, 2000.00, false),
+                benefitType("Pension Fund", "Retirement pension fund", 1000.00, 1500.00, false),
+                benefitType("Life Cover", "Group life insurance", 200.00, 500.00, true)
+        ).forEach(b -> {
+            if (!benefitTypeRepository.existsByName(b.getName())) {
+                benefitTypeRepository.save(b);
+            }
+        });
+    }
+
+    private BenefitType benefitType(String name, String desc, double empContrib, double erContrib, boolean optional) {
+        BenefitType t = new BenefitType();
+        t.setName(name);
+        t.setDescription(desc);
+        t.setEmployeeContribution(BigDecimal.valueOf(empContrib));
+        t.setEmployerContribution(BigDecimal.valueOf(erContrib));
+        t.setIsOptional(optional);
+        return t;
     }
 
     private LeaveType leaveType(String name, int days, int cycleYears, boolean requiresDocs, boolean isPaid) {
