@@ -1,82 +1,95 @@
 #!/bin/bash
 
-# Test all service connections after docker-compose up
-
+# Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
+
+# Always run relative to the script's own directory
+cd "$(dirname "$0")" || exit 1
 
 echo "=========================================="
 echo "   Service Connection Tester"
 echo "=========================================="
 echo ""
 
-# Wait for services to be ready
-echo "Waiting for services to stabilize (30 seconds)..."
-sleep 30
+# ── Dependency check ──────────────────────────────────────────────────
+if ! command -v curl &> /dev/null; then
+    echo -e "${RED}FAILED${NC} — curl is required but not installed."
+    exit 1
+fi
 
-# Test Database
+if ! command -v docker &> /dev/null; then
+    echo -e "${RED}FAILED${NC} — docker is required but not installed."
+    exit 1
+fi
+
+# ── Wait for API to be ready (poll instead of fixed sleep) ────────────
+echo "Waiting for API to be ready (up to 60 seconds)..."
+MAX_WAIT=60
+WAITED=0
+until curl -s http://localhost:8080/actuator/health | grep -q '"status":"UP"' 2>/dev/null; do
+    if [ "$WAITED" -ge "$MAX_WAIT" ]; then
+        echo -e "${YELLOW}⚠  API did not become ready within ${MAX_WAIT}s — continuing anyway${NC}"
+        break
+    fi
+    sleep 3
+    WAITED=$((WAITED + 3))
+done
+echo ""
+
+# ── Helper ────────────────────────────────────────────────────────────
+check_http() {
+    local label="$1"
+    local url="$2"
+    echo -n "Testing $label... "
+    local code
+    code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 5 "$url")
+    if [ "$code" = "200" ]; then
+        echo -e "${GREEN}✓ OK (HTTP $code)${NC}"
+    else
+        echo -e "${YELLOW}⚠  Got HTTP $code${NC}"
+    fi
+}
+
+# ── HTTP checks ───────────────────────────────────────────────────────
+check_http "API health endpoint"       "http://localhost:8080/actuator/health"
+check_http "Swagger UI"                "http://localhost:8080/swagger-ui/index.html"
+check_http "Employee frontend"         "http://localhost:3000"
+check_http "HR dashboard"              "http://localhost:3001"
+
+# ── PostgreSQL (via Docker) ───────────────────────────────────────────
 echo -n "Testing PostgreSQL connection... "
-if docker exec employeehub-db pg_isready -U admin &> /dev/null; then
+if docker exec employeehub-db pg_isready -U admin -d employeehub &> /dev/null; then
     echo -e "${GREEN}✓ Connected${NC}"
 else
-    echo -e "${RED}✗ Failed${NC}"
+    echo -e "${RED}✗ Failed — is the db container running?${NC}"
 fi
 
-# Test API
-echo -n "Testing API health endpoint... "
-API_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:8080/actuator/health)
-if [ "$API_RESPONSE" = "200" ]; then
-    echo -e "${GREEN}✓ Responding (HTTP $API_RESPONSE)${NC}"
-else
-    echo -e "${YELLOW}⚠ Got HTTP $API_RESPONSE${NC}"
-fi
-
-# Test Frontend
-echo -n "Testing Frontend availability... "
-FRONTEND_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:3000)
-if [ "$FRONTEND_RESPONSE" = "200" ]; then
-    echo -e "${GREEN}✓ Running (HTTP $FRONTEND_RESPONSE)${NC}"
-else
-    echo -e "${YELLOW}⚠ Got HTTP $FRONTEND_RESPONSE${NC}"
-fi
-
-# Test HR Dashboard
-echo -n "Testing HR Dashboard availability... "
-DASHBOARD_RESPONSE=$(curl -s -w "%{http_code}" -o /dev/null http://localhost:3001)
-if [ "$DASHBOARD_RESPONSE" = "200" ]; then
-    echo -e "${GREEN}✓ Running (HTTP $DASHBOARD_RESPONSE)${NC}"
-else
-    echo -e "${YELLOW}⚠ Got HTTP $DASHBOARD_RESPONSE${NC}"
-fi
-
-# Test API from Frontend container
-echo -n "Testing API access from Frontend container... "
-API_FROM_FE=$(docker exec employeehub-frontend wget --quiet --tries=1 -O /dev/null -w "%{http_code}" http://api:8080/actuator/health 2>/dev/null)
-if [ "$API_FROM_FE" = "200" ]; then
+# ── Internal network: frontend → API ─────────────────────────────────
+echo -n "Testing API access from frontend container... "
+if docker exec employeehub-frontend wget --quiet --tries=1 --spider http://api:8080/actuator/health 2>/dev/null; then
     echo -e "${GREEN}✓ Frontend can reach API${NC}"
 else
     echo -e "${RED}✗ Frontend cannot reach API${NC}"
 fi
 
-# Test Database from API container
-echo -n "Testing Database access from API container... "
-if docker exec employeehub-api pg_isready -h db -U admin &> /dev/null; then
-    echo -e "${GREEN}✓ API can reach Database${NC}"
+# ── Internal network: dashboard → API ────────────────────────────────
+echo -n "Testing API access from dashboard container... "
+if docker exec employeehub-hrdashboard wget --quiet --tries=1 --spider http://api:8080/actuator/health 2>/dev/null; then
+    echo -e "${GREEN}✓ Dashboard can reach API${NC}"
 else
-    echo -e "${RED}✗ API cannot reach Database${NC}"
+    echo -e "${RED}✗ Dashboard cannot reach API${NC}"
 fi
 
+# ── Summary ───────────────────────────────────────────────────────────
 echo ""
 echo "=========================================="
-echo "   Test Summary"
+echo "   URLs"
 echo "=========================================="
-echo "Frontend URL:    http://localhost:3000"
-echo "HR Dashboard:    http://localhost:3001"
-echo "API URL:         http://localhost:8080"
-echo "PostgreSQL:      localhost:5432"
-echo ""
-echo "Credentials:"
-echo "  DB User: admin"
-echo "  DB Pass: administrator"
+echo "  Employee frontend  →  http://localhost:3000"
+echo "  HR dashboard       →  http://localhost:3001"
+echo "  API                →  http://localhost:8080"
+echo "  Swagger UI         →  http://localhost:8080/swagger-ui/index.html"
+echo "  PostgreSQL         →  localhost:5432"

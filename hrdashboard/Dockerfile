@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package.json ./
 RUN npm install
@@ -13,3 +13,8 @@ FROM nginx:alpine
 COPY --from=builder /app/build /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 3001
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+    CMD wget --quiet --tries=1 --spider http://localhost:3001/health || exit 1
+
+CMD ["nginx", "-g", "daemon off;"]

@@ -31,14 +31,14 @@ function App() {
   const fetchStats = useCallback(async (jwt) => {
     if (!jwt) return;
     try {
-      const res = await axios.get(`${API}/contacts?page=0&size=1`, {
+      const res = await axios.get(`${API}/employees?page=0&size=1`, {
         headers: { Authorization: `Bearer ${jwt}` }
       });
-      const page = res.data.page || res.data;
+      const page = res.data?.data ?? res.data;
       setStats({ total: page.totalElements ?? '—', pages: page.totalPages ?? '—' });
-      addLog('GET', '/contacts?page=0&size=1', 200);
+      addLog('GET', '/employees?page=0&size=1', 200);
     } catch (e) {
-      addLog('GET', '/contacts', e.response?.status || 'ERR');
+      addLog('GET', '/employees', e.response?.status || 'ERR');
     }
   }, [addLog]);
 
@@ -64,7 +64,7 @@ function App() {
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>ContactApp Dashboard</h1>
+        <h1>EmployeeHub Dashboard</h1>
         <span className={`status-badge ${health}`}>API {health.toUpperCase()}</span>
       </div>
 
