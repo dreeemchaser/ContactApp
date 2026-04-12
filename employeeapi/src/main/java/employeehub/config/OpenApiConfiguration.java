@@ -19,8 +19,8 @@ public class OpenApiConfiguration {
         return new OpenAPI()
                 .info(new Info()
                         .title("Employee Hub API")
-                        .version("1.0.0")
-                        .description("REST API for the Employee Hub management system"))
+                        .version("2.0.0")
+                        .description("REST API for the Employee Hub — HR, Payroll, Leave, Timesheets, Documents, Benefits, Performance & Notifications"))
                 .servers(List.of(
                         new Server().url("http://localhost:8080").description("Local Development"),
                         new Server().url("http://api:8080").description("Docker Container")

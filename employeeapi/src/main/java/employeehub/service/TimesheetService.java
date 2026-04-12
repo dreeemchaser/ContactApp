@@ -4,6 +4,7 @@ import employeehub.domain.Employee;
 import employeehub.domain.Timesheet;
 import employeehub.domain.TimesheetEntry;
 import employeehub.domain.enums.Role;
+import employeehub.domain.enums.NotificationType;
 import employeehub.domain.enums.TimesheetStatus;
 import employeehub.dto.TimesheetEntryRequest;
 import employeehub.dto.TimesheetRequest;
@@ -23,6 +24,7 @@ public class TimesheetService {
 
     private final TimesheetRepository timesheetRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
 
     public Timesheet create(String employeeId, TimesheetRequest req) {
         Employee employee = findEmployee(employeeId);
@@ -71,7 +73,15 @@ public class TimesheetService {
         validateOwner(timesheet, employeeId);
         validateDraft(timesheet);
         timesheet.setStatus(TimesheetStatus.SUBMITTED);
-        return timesheetRepository.save(timesheet);
+        Timesheet saved = timesheetRepository.save(timesheet);
+
+        if (timesheet.getEmployee().getManager() != null) {
+            notificationService.send(timesheet.getEmployee().getManager(),
+                    "Timesheet Submitted",
+                    timesheet.getEmployee().getFirstName() + " submitted a timesheet for review",
+                    NotificationType.TIMESHEET, "Timesheet", saved.getId());
+        }
+        return saved;
     }
 
     public Timesheet approve(String timesheetId, String approverId) {

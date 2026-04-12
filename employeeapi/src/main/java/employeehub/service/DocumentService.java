@@ -4,6 +4,7 @@ import employeehub.domain.Document;
 import employeehub.domain.Employee;
 import employeehub.domain.enums.DocumentStatus;
 import employeehub.domain.enums.DocumentType;
+import employeehub.domain.enums.NotificationType;
 import employeehub.exception.ResourceNotFoundException;
 import employeehub.repository.DocumentRepository;
 import employeehub.repository.EmployeeRepository;
@@ -22,6 +23,8 @@ public class DocumentService {
     private final DocumentRepository documentRepository;
     private final EmployeeRepository employeeRepository;
     private final PhotoService photoService;
+    private final NotificationService notificationService;
+    private final AuditService auditService;
 
     public Document upload(String employeeId, DocumentType type, MultipartFile file) {
         Employee employee = findEmployee(employeeId);
@@ -55,7 +58,14 @@ public class DocumentService {
         doc.setStatus(DocumentStatus.VERIFIED);
         doc.setVerifiedBy(findEmployee(verifierId));
         doc.setVerifiedAt(LocalDateTime.now());
-        return documentRepository.save(doc);
+        Document saved = documentRepository.save(doc);
+
+        notificationService.send(doc.getEmployee(),
+                "Document Verified",
+                "Your document '" + doc.getFileName() + "' has been verified",
+                NotificationType.DOCUMENT, "Document", saved.getId());
+        auditService.log(findEmployee(verifierId), "VERIFY", "Document", saved.getId(), "PENDING", "VERIFIED");
+        return saved;
     }
 
     public Document reject(String documentId, String verifierId) {
@@ -63,7 +73,14 @@ public class DocumentService {
         doc.setStatus(DocumentStatus.REJECTED);
         doc.setVerifiedBy(findEmployee(verifierId));
         doc.setVerifiedAt(LocalDateTime.now());
-        return documentRepository.save(doc);
+        Document saved = documentRepository.save(doc);
+
+        notificationService.send(doc.getEmployee(),
+                "Document Rejected",
+                "Your document '" + doc.getFileName() + "' has been rejected",
+                NotificationType.DOCUMENT, "Document", saved.getId());
+        auditService.log(findEmployee(verifierId), "REJECT", "Document", saved.getId(), "PENDING", "REJECTED");
+        return saved;
     }
 
     private Document findDocument(String id) {

@@ -13,21 +13,29 @@ import java.time.LocalDateTime;
 public class AuditLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "performed_by_id")
+    private Employee performedBy;
+
+    @Column(nullable = false)
+    private String action;
 
     @Column(nullable = false)
     private String entityType;
 
     private String entityId;
 
-    @Column(nullable = false)
-    private String action;
+    @Column(columnDefinition = "TEXT")
+    private String oldValue;
 
-    private String performedBy;
-
-    private String details;
+    @Column(columnDefinition = "TEXT")
+    private String newValue;
 
     @Column(nullable = false)
     private LocalDateTime timestamp = LocalDateTime.now();
+
+    private String ipAddress;
 }

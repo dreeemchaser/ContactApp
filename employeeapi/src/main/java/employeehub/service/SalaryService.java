@@ -2,6 +2,7 @@ package employeehub.service;
 
 import employeehub.domain.*;
 import employeehub.domain.enums.SalaryIncreaseStatus;
+import employeehub.domain.enums.NotificationType;
 import employeehub.dto.PaySlipGenerateRequest;
 import employeehub.dto.SalaryIncreaseRequestDto;
 import employeehub.dto.SalaryRecordRequest;
@@ -28,6 +29,8 @@ public class SalaryService {
     private final SalaryIncreaseRequestRepository increaseRequestRepository;
     private final TaxBracketRepository taxBracketRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
+    private final AuditService auditService;
 
     // ── Salary Records ───────────────────────────────────────────────
 
@@ -47,7 +50,9 @@ public class SalaryService {
         record.setBasicSalary(req.getBasicSalary());
         record.setEffectiveDate(req.getEffectiveDate());
         record.setCreatedBy(createdBy);
-        return salaryRecordRepository.save(record);
+        SalaryRecord saved = salaryRecordRepository.save(record);
+        auditService.log(createdBy, "CREATE", "SalaryRecord", saved.getId(), null, req.getBasicSalary().toString());
+        return saved;
     }
 
     public List<SalaryRecord> getSalaryHistory(String employeeId) {
@@ -131,7 +136,15 @@ public class SalaryService {
         request.setStatus(SalaryIncreaseStatus.APPROVED);
         request.setReviewedBy(findEmployee(reviewerId));
         request.setReviewedAt(LocalDateTime.now());
-        return increaseRequestRepository.save(request);
+        SalaryIncreaseRequest saved = increaseRequestRepository.save(request);
+
+        notificationService.send(request.getEmployee(),
+                "Salary Increase Approved",
+                "Your salary increase request has been approved",
+                NotificationType.SALARY, "SalaryIncreaseRequest", saved.getId());
+        auditService.log(findEmployee(reviewerId), "APPROVE", "SalaryIncreaseRequest", saved.getId(),
+                request.getCurrentSalary().toString(), request.getProposedSalary().toString());
+        return saved;
     }
 
     public SalaryIncreaseRequest rejectIncreaseRequest(String id, String reviewerId, String reason) {

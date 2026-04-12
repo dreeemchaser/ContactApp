@@ -2,6 +2,7 @@ package employeehub.service;
 
 import employeehub.domain.*;
 import employeehub.domain.enums.LeaveStatus;
+import employeehub.domain.enums.NotificationType;
 import employeehub.domain.enums.Role;
 import employeehub.dto.LeaveRequestDto;
 import employeehub.exception.ResourceNotFoundException;
@@ -23,6 +24,8 @@ public class LeaveService {
     private final LeaveBalanceRepository leaveBalanceRepository;
     private final LeaveTypeRepository leaveTypeRepository;
     private final EmployeeRepository employeeRepository;
+    private final NotificationService notificationService;
+    private final AuditService auditService;
 
     // ── Leave Requests ──────────────────────────────────────────────
 
@@ -48,7 +51,15 @@ public class LeaveService {
         request.setEndDate(dto.getEndDate());
         request.setTotalDays(days);
         request.setReason(dto.getReason());
-        return leaveRequestRepository.save(request);
+        LeaveRequest saved = leaveRequestRepository.save(request);
+
+        if (employee.getManager() != null) {
+            notificationService.send(employee.getManager(),
+                    "Leave Request Submitted",
+                    employee.getFirstName() + " " + employee.getLastName() + " submitted a leave request",
+                    NotificationType.LEAVE, "LeaveRequest", saved.getId());
+        }
+        return saved;
     }
 
     public List<LeaveRequest> getMyRequests(String employeeId) {
@@ -69,9 +80,15 @@ public class LeaveService {
         request.setStatus(LeaveStatus.APPROVED);
         request.setApprovedBy(approver);
         request.setApprovedAt(LocalDateTime.now());
-
         deductBalance(request);
-        return leaveRequestRepository.save(request);
+        LeaveRequest saved = leaveRequestRepository.save(request);
+
+        notificationService.send(request.getEmployee(),
+                "Leave Request Approved",
+                "Your leave request has been approved",
+                NotificationType.LEAVE, "LeaveRequest", saved.getId());
+        auditService.log(approver, "APPROVE", "LeaveRequest", saved.getId(), "PENDING", "APPROVED");
+        return saved;
     }
 
     public LeaveRequest reject(String requestId, String approverId, String reason) {
@@ -83,7 +100,14 @@ public class LeaveService {
         request.setApprovedBy(approver);
         request.setApprovedAt(LocalDateTime.now());
         request.setRejectionReason(reason);
-        return leaveRequestRepository.save(request);
+        LeaveRequest saved = leaveRequestRepository.save(request);
+
+        notificationService.send(request.getEmployee(),
+                "Leave Request Rejected",
+                "Your leave request has been rejected: " + reason,
+                NotificationType.LEAVE, "LeaveRequest", saved.getId());
+        auditService.log(approver, "REJECT", "LeaveRequest", saved.getId(), "PENDING", "REJECTED");
+        return saved;
     }
 
     public void cancel(String requestId, String employeeId) {
