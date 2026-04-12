@@ -1,19 +1,22 @@
 package employeehub.config;
 
-import employeehub.domain.BenefitType;
-import employeehub.domain.LeaveType;
-import employeehub.domain.TaxBracket;
-import employeehub.repository.BenefitTypeRepository;
-import employeehub.repository.LeaveTypeRepository;
-import employeehub.repository.TaxBracketRepository;
+import employeehub.domain.*;
+import employeehub.domain.enums.EmploymentStatus;
+import employeehub.domain.enums.EmploymentType;
+import employeehub.domain.enums.Role;
+import employeehub.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class DataSeeder implements ApplicationRunner {
@@ -21,12 +24,60 @@ public class DataSeeder implements ApplicationRunner {
     private final LeaveTypeRepository leaveTypeRepository;
     private final TaxBracketRepository taxBracketRepository;
     private final BenefitTypeRepository benefitTypeRepository;
+    private final DepartmentRepository departmentRepository;
+    private final TeamRepository teamRepository;
+    private final EmployeeRepository employeeRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    private static final String ADMIN_EMAIL = "admin@employeehub.com";
 
     @Override
     public void run(ApplicationArguments args) {
+        Department department = seedDepartment();
+        Team team = seedTeam(department);
+        seedAdminUser(department, team);
         seedLeaveTypes();
         seedTaxBrackets();
         seedBenefitTypes();
+    }
+
+    private Department seedDepartment() {
+        return departmentRepository.findAll().stream().findFirst().orElseGet(() -> {
+            Department d = new Department();
+            d.setName("Human Resources");
+            d.setDescription("HR and administration");
+            return departmentRepository.save(d);
+        });
+    }
+
+    private Team seedTeam(Department department) {
+        return teamRepository.findAll().stream().findFirst().orElseGet(() -> {
+            Team t = new Team();
+            t.setName("Management");
+            t.setDescription("Leadership and management");
+            t.setDepartment(department);
+            return teamRepository.save(t);
+        });
+    }
+
+    private void seedAdminUser(Department department, Team team) {
+        if (employeeRepository.existsByEmail(ADMIN_EMAIL)) return;
+
+        Employee admin = new Employee();
+        admin.setFirstName("System");
+        admin.setLastName("Admin");
+        admin.setEmail(ADMIN_EMAIL);
+        admin.setPassword(passwordEncoder.encode("Admin@1234"));
+        admin.setJobTitle("System Administrator");
+        admin.setEmploymentType(EmploymentType.FULL_TIME);
+        admin.setEmploymentStatus(EmploymentStatus.ACTIVE);
+        admin.setStartDate(LocalDate.now());
+        admin.setRole(Role.SUPER_ADMIN);
+        admin.setDepartment(department);
+        admin.setTeam(team);
+        admin.setEmployeeNumber("EMP-001");
+        employeeRepository.save(admin);
+        log.info("Seeded default admin user: {}", ADMIN_EMAIL);
     }
 
     private void seedLeaveTypes() {

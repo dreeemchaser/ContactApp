@@ -133,8 +133,9 @@ public class SalaryService {
 
     public SalaryIncreaseRequest approveIncreaseRequest(String id, String reviewerId) {
         SalaryIncreaseRequest request = findIncreaseRequest(id);
+        Employee reviewer = findEmployee(reviewerId);
         request.setStatus(SalaryIncreaseStatus.APPROVED);
-        request.setReviewedBy(findEmployee(reviewerId));
+        request.setReviewedBy(reviewer);
         request.setReviewedAt(LocalDateTime.now());
         SalaryIncreaseRequest saved = increaseRequestRepository.save(request);
 
@@ -142,7 +143,7 @@ public class SalaryService {
                 "Salary Increase Approved",
                 "Your salary increase request has been approved",
                 NotificationType.SALARY, "SalaryIncreaseRequest", saved.getId());
-        auditService.log(findEmployee(reviewerId), "APPROVE", "SalaryIncreaseRequest", saved.getId(),
+        auditService.log(reviewer, "APPROVE", "SalaryIncreaseRequest", saved.getId(),
                 request.getCurrentSalary().toString(), request.getProposedSalary().toString());
         return saved;
     }

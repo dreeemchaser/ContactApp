@@ -1,5 +1,6 @@
 package employeehub.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import employeehub.domain.enums.DocumentStatus;
 import employeehub.domain.enums.DocumentType;
 import jakarta.persistence.*;
@@ -22,6 +23,7 @@ public class Document {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee employee;
 
     @Enumerated(EnumType.STRING)
@@ -38,10 +40,12 @@ public class Document {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "uploaded_by_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee uploadedBy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "verified_by_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee verifiedBy;
 
     private LocalDateTime verifiedAt;

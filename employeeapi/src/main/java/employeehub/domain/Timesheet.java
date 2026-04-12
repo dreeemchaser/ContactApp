@@ -1,5 +1,6 @@
 package employeehub.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import employeehub.domain.enums.TimesheetStatus;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -24,6 +25,7 @@ public class Timesheet {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee employee;
 
     @Column(nullable = false)
@@ -41,6 +43,7 @@ public class Timesheet {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee approvedBy;
 
     private LocalDateTime approvedAt;

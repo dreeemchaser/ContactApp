@@ -56,6 +56,13 @@ public class EmployeeController {
         return ResponseEntity.ok(ApiResponse.ok(employeeService.update(id, request)));
     }
 
+    @DeleteMapping("/{id}")
+    @Operation(summary = "Delete an employee")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable String id) {
+        employeeService.delete(id);
+        return ResponseEntity.ok(ApiResponse.ok("Employee deleted", null));
+    }
+
     @PatchMapping("/{id}/status")
     @Operation(summary = "Update employee employment status")
     public ResponseEntity<ApiResponse<Employee>> updateStatus(

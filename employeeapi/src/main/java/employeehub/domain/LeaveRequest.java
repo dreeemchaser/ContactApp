@@ -1,5 +1,6 @@
 package employeehub.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import employeehub.domain.enums.LeaveStatus;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -22,10 +23,12 @@ public class LeaveRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee employee;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "leave_type_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private LeaveType leaveType;
 
     @Column(nullable = false)
@@ -45,6 +48,7 @@ public class LeaveRequest {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "approved_by_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee approvedBy;
 
     private LocalDateTime approvedAt;

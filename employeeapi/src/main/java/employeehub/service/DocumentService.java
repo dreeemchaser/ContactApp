@@ -53,6 +53,10 @@ public class DocumentService {
         return photoService.load(doc.getFileUrl());
     }
 
+    public Document getDocument(String documentId) {
+        return findDocument(documentId);
+    }
+
     public Document verify(String documentId, String verifierId) {
         Document doc = findDocument(documentId);
         doc.setStatus(DocumentStatus.VERIFIED);

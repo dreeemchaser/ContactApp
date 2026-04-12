@@ -6,14 +6,14 @@ import employeehub.domain.Team;
 import employeehub.domain.enums.EmploymentStatus;
 import employeehub.dto.EmployeeRequest;
 import employeehub.exception.ResourceNotFoundException;
-import employeehub.repository.DepartmentRepository;
-import employeehub.repository.EmployeeRepository;
-import employeehub.repository.TeamRepository;
+import employeehub.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -22,13 +22,21 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final TeamRepository teamRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final LeaveBalanceRepository leaveBalanceRepository;
+    private final LeaveRequestRepository leaveRequestRepository;
+    private final NotificationRepository notificationRepository;
     @Lazy private final LeaveService leaveService;
 
     public Employee create(EmployeeRequest req) {
         if (employeeRepository.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("Email already in use: " + req.getEmail());
         }
+        if (req.getPassword() == null || req.getPassword().isBlank()) {
+            throw new IllegalArgumentException("Password is required");
+        }
         Employee employee = mapToEmployee(new Employee(), req);
+        employee.setPassword(passwordEncoder.encode(req.getPassword()));
         employee.setEmployeeNumber(generateEmployeeNumber());
         Employee saved = employeeRepository.save(employee);
         leaveService.createBalancesForEmployee(saved);
@@ -64,6 +72,15 @@ public class EmployeeService {
         return employeeRepository.save(employee);
     }
 
+    @Transactional
+    public void delete(String id) {
+        Employee employee = getById(id);
+        leaveBalanceRepository.deleteByEmployeeId(id);
+        leaveRequestRepository.deleteByEmployeeId(id);
+        notificationRepository.deleteByRecipientId(id);
+        employeeRepository.delete(employee);
+    }
+
     private Employee mapToEmployee(Employee employee, EmployeeRequest req) {
         Department department = departmentRepository.findById(req.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Department not found: " + req.getDepartmentId()));
@@ -88,7 +105,7 @@ public class EmployeeService {
         employee.setRole(req.getRole() != null ? req.getRole() : employee.getRole());
         employee.setEmploymentStatus(req.getEmploymentStatus() != null ? req.getEmploymentStatus() : employee.getEmploymentStatus());
 
-        if (req.getManagerId() != null) {
+        if (req.getManagerId() != null && !req.getManagerId().isBlank()) {
             Employee manager = employeeRepository.findById(req.getManagerId())
                     .orElseThrow(() -> new ResourceNotFoundException("Manager not found: " + req.getManagerId()));
             employee.setManager(manager);

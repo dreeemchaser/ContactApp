@@ -11,6 +11,7 @@ import java.util.List;
 public interface NotificationRepository extends JpaRepository<Notification, String> {
 
     List<Notification> findByRecipientIdOrderByCreatedAtDesc(String recipientId);
+    void deleteByRecipientId(String recipientId);
 
     @Modifying
     @Query("UPDATE Notification n SET n.isRead = true WHERE n.recipient.id = :recipientId")

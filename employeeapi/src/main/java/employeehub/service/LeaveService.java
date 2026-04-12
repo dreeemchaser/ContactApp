@@ -91,6 +91,7 @@ public class LeaveService {
         return saved;
     }
 
+    @Transactional
     public LeaveRequest reject(String requestId, String approverId, String reason) {
         LeaveRequest request = findRequest(requestId);
         Employee approver = findEmployee(approverId);

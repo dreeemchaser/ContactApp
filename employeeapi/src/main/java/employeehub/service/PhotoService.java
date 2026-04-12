@@ -33,7 +33,11 @@ public class PhotoService {
 
     public byte[] load(String filename) {
         try {
-            Path filePath = Paths.get(PHOTO_DIRECTORY).toAbsolutePath().normalize().resolve(filename);
+            Path uploadDir = Paths.get(PHOTO_DIRECTORY).toAbsolutePath().normalize();
+            Path filePath = uploadDir.resolve(filename).normalize();
+            if (!filePath.startsWith(uploadDir)) {
+                throw new ResourceNotFoundException("Photo not found: " + filename);
+            }
             if (!Files.exists(filePath)) {
                 throw new ResourceNotFoundException("Photo not found: " + filename);
             }

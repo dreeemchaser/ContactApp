@@ -1,11 +1,14 @@
 package employeehub.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import employeehub.domain.enums.EmploymentStatus;
 import employeehub.domain.enums.EmploymentType;
 import employeehub.domain.enums.Role;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -13,8 +16,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
+@EqualsAndHashCode(of = "id")
 @Table(name = "employees")
 public class Employee {
 
@@ -62,14 +67,17 @@ public class Employee {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Department department;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "team_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
     private Team team;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "manager_id")
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee manager;
 
     @Enumerated(EnumType.STRING)

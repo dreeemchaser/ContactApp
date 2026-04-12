@@ -1,5 +1,6 @@
 package employeehub.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import employeehub.domain.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class Notification {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "recipient_id", nullable = false)
+    @JsonIgnoreProperties({"hibernateLazyInitializer", "handler", "password", "manager"})
     private Employee recipient;
 
     @Column(nullable = false)

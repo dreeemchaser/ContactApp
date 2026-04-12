@@ -55,10 +55,12 @@ public class DocumentController {
     @GetMapping("/{id}/download")
     @Operation(summary = "Download a document")
     public ResponseEntity<byte[]> download(@PathVariable String id) {
+        Document doc = documentService.getDocument(id);
         byte[] data = documentService.download(id);
+        String disposition = "attachment; filename=\"" + doc.getFileName() + "\"";
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"document\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, disposition)
                 .body(data);
     }
 

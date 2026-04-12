@@ -12,6 +12,7 @@ import java.util.List;
 public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, String> {
 
     List<LeaveRequest> findByEmployeeId(String employeeId);
+    void deleteByEmployeeId(String employeeId);
 
     @Query("SELECT lr FROM LeaveRequest lr WHERE " +
            "(:managerId IS NULL OR lr.employee.manager.id = :managerId) AND " +

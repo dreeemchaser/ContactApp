@@ -19,6 +19,7 @@ public class EmployeeRequest {
     private String idNumber;
     private String address;
     private String jobTitle;
+    private String password;
     private EmploymentType employmentType;
     private EmploymentStatus employmentStatus;
     private LocalDate startDate;
