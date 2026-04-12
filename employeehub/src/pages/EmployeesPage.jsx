@@ -29,11 +29,11 @@ const EmployeesPage = ({ data, currentPage, getAllContacts, loading }) => (
 
           {data?.content?.length > 0 && data?.page?.totalPages > 1 && (
             <div className='pagination'>
-              <a onClick={() => getAllContacts(currentPage - 1)} className={currentPage === 0 ? 'disabled' : ''}>&laquo;</a>
+              <button onClick={() => getAllContacts(currentPage - 1)} disabled={currentPage === 0}>&laquo;</button>
               {[...Array(data.page.totalPages).keys()].map(p => (
-                <a onClick={() => getAllContacts(p)} className={currentPage === p ? 'active' : ''} key={p}>{p + 1}</a>
+                <button onClick={() => getAllContacts(p)} className={currentPage === p ? 'active' : ''} key={p}>{p + 1}</button>
               ))}
-              <a onClick={() => getAllContacts(currentPage + 1)} className={data.page.totalPages === currentPage + 1 ? 'disabled' : ''}>&raquo;</a>
+              <button onClick={() => getAllContacts(currentPage + 1)} disabled={data.page.totalPages === currentPage + 1}>&raquo;</button>
             </div>
           )}
         </>

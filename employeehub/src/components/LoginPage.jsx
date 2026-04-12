@@ -39,10 +39,10 @@ const LoginPage = ({ onLogin }) => {
 
         <form onSubmit={handleSubmit}>
           <div className='form-group'>
-            <label className='form-label'>Username</label>
+            <label className='form-label'>Email</label>
             <input
               className='form-control'
-              type='text'
+              type='email'
               value={username}
               onChange={e => setUsername(e.target.value)}
               required

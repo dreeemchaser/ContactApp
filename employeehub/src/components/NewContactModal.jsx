@@ -1,26 +1,58 @@
-import { useRef, useState } from 'react';
-import { saveContact, updatePhoto } from '../api/ContactService';
+import { useRef, useState, useEffect } from 'react';
+import { saveEmployee, updateEmployeePhoto, getDepartments, getTeams } from '../api/ContactService';
 
-const EMPTY = { name: '', email: '', phone: '', title: '', address: '', status: 'active' };
+const EMPTY = {
+  firstName: '', lastName: '', email: '', phone: '',
+  jobTitle: '', address: '', gender: '', password: '',
+  departmentId: '', teamId: '',
+  employmentType: 'FULL_TIME', employmentStatus: 'ACTIVE',
+  startDate: '', role: 'EMPLOYEE',
+};
 
 const NewContactModal = ({ onContactSaved }) => {
   const dialogRef = useRef(null);
-  const [contact, setContact] = useState(EMPTY);
-  const [photo, setPhoto] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [form, setForm]           = useState(EMPTY);
+  const [departments, setDepartments] = useState([]);
+  const [teams, setTeams]         = useState([]);
+  const [photo, setPhoto]         = useState(null);
+  const [preview, setPreview]     = useState(null);
+  const [saving, setSaving]       = useState(false);
+  const [error, setError]         = useState(null);
 
-  const open  = () => { setError(null); dialogRef.current?.showModal(); };
-  const close = () => {
-    setContact(EMPTY);
+  // Load departments once on mount
+  useEffect(() => {
+    getDepartments()
+      .then(r => setDepartments(r.data?.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  // Reload teams whenever department changes
+  useEffect(() => {
+    if (!form.departmentId) { setTeams([]); return; }
+    getTeams(form.departmentId)
+      .then(r => setTeams(r.data?.data ?? []))
+      .catch(() => {});
+  }, [form.departmentId]);
+
+  const open = () => {
+    setError(null);
+    setForm(EMPTY);
     setPhoto(null);
     setPreview(null);
-    setError(null);
-    dialogRef.current?.close();
+    dialogRef.current?.showModal();
   };
 
-  const handleChange = e => setContact({ ...contact, [e.target.name]: e.target.value });
+  const close = () => dialogRef.current?.close();
+
+  const set = e => {
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+      // reset team when department changes
+      ...(name === 'departmentId' ? { teamId: '' } : {}),
+    }));
+  };
 
   const handlePhotoChange = e => {
     const file = e.target.files[0];
@@ -34,17 +66,21 @@ const NewContactModal = ({ onContactSaved }) => {
     setSaving(true);
     setError(null);
     try {
-      const res = await saveContact(contact);
-      if (photo) {
-        const fd = new FormData();
-        fd.append('id', res.data.id);
-        fd.append('file', photo);
-        await updatePhoto(fd);
+      const payload = {
+        ...form,
+        departmentId: Number(form.departmentId),
+        teamId: Number(form.teamId),
+        startDate: form.startDate || new Date().toISOString().split('T')[0],
+      };
+      const res = await saveEmployee(payload);
+      const savedId = res.data?.data?.id;
+      if (photo && savedId) {
+        await updateEmployeePhoto(savedId, photo);
       }
       await onContactSaved();
       close();
-    } catch {
-      setError('Failed to save. Please try again.');
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -59,7 +95,7 @@ const NewContactModal = ({ onContactSaved }) => {
       <dialog ref={dialogRef} className='modal'>
         <div className='modal__header'>
           <h3>New Employee</h3>
-          <i onClick={close} className='bi bi-x-lg'></i>
+          <i onClick={close} className='bi bi-x-lg' style={{ cursor: 'pointer' }}></i>
         </div>
 
         <div className='divider'></div>
@@ -68,37 +104,89 @@ const NewContactModal = ({ onContactSaved }) => {
 
         <form onSubmit={handleSubmit}>
           <div className='form-grid'>
-            {[
-              { label: 'Name',    name: 'name',    type: 'text',  required: true },
-              { label: 'Email',   name: 'email',   type: 'email', required: true },
-              { label: 'Phone',   name: 'phone',   type: 'text' },
-              { label: 'Title',   name: 'title',   type: 'text' },
-              { label: 'Address', name: 'address', type: 'text' },
-            ].map(f => (
-              <div className='form-group' key={f.name}>
-                <label className='form-label'>{f.label}</label>
-                <input className='form-control' type={f.type} name={f.name} value={contact[f.name]} onChange={handleChange} required={f.required} />
-              </div>
-            ))}
 
+            {/* Name */}
             <div className='form-group'>
-              <label className='form-label'>Status</label>
-              <select className='form-control' name='status' value={contact.status} onChange={handleChange}>
-                <option value='active'>Active</option>
-                <option value='inactive'>Inactive</option>
+              <label className='form-label'>First Name <span style={{ color: 'var(--red)' }}>*</span></label>
+              <input className='form-control' type='text' name='firstName' value={form.firstName} onChange={set} required />
+            </div>
+            <div className='form-group'>
+              <label className='form-label'>Last Name <span style={{ color: 'var(--red)' }}>*</span></label>
+              <input className='form-control' type='text' name='lastName' value={form.lastName} onChange={set} required />
+            </div>
+
+            {/* Contact */}
+            <div className='form-group'>
+              <label className='form-label'>Email <span style={{ color: 'var(--red)' }}>*</span></label>
+              <input className='form-control' type='email' name='email' value={form.email} onChange={set} required />
+            </div>
+            <div className='form-group'>
+              <label className='form-label'>Password <span style={{ color: 'var(--red)' }}>*</span></label>
+              <input className='form-control' type='password' name='password' value={form.password} onChange={set} required />
+            </div>
+            <div className='form-group'>
+              <label className='form-label'>Phone</label>
+              <input className='form-control' type='text' name='phone' value={form.phone} onChange={set} />
+            </div>
+
+            {/* Job */}
+            <div className='form-group'>
+              <label className='form-label'>Job Title <span style={{ color: 'var(--red)' }}>*</span></label>
+              <input className='form-control' type='text' name='jobTitle' value={form.jobTitle} onChange={set} required />
+            </div>
+            <div className='form-group'>
+              <label className='form-label'>Start Date</label>
+              <input className='form-control' type='date' name='startDate' value={form.startDate} onChange={set} />
+            </div>
+
+            {/* Department → Team (cascading) */}
+            <div className='form-group'>
+              <label className='form-label'>Department <span style={{ color: 'var(--red)' }}>*</span></label>
+              <select className='form-control' name='departmentId' value={form.departmentId} onChange={set} required>
+                <option value=''>— Select department —</option>
+                {departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+              </select>
+            </div>
+            <div className='form-group'>
+              <label className='form-label'>Team <span style={{ color: 'var(--red)' }}>*</span></label>
+              <select className='form-control' name='teamId' value={form.teamId} onChange={set} required disabled={!form.departmentId}>
+                <option value=''>— Select team —</option>
+                {teams.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
               </select>
             </div>
 
+            {/* Employment */}
+            <div className='form-group'>
+              <label className='form-label'>Employment Type</label>
+              <select className='form-control' name='employmentType' value={form.employmentType} onChange={set}>
+                <option value='FULL_TIME'>Full Time</option>
+                <option value='PART_TIME'>Part Time</option>
+                <option value='CONTRACT'>Contract</option>
+              </select>
+            </div>
+            <div className='form-group'>
+              <label className='form-label'>Role</label>
+              <select className='form-control' name='role' value={form.role} onChange={set}>
+                <option value='EMPLOYEE'>Employee</option>
+                <option value='MANAGER'>Manager</option>
+                <option value='HR_ADMIN'>HR Admin</option>
+                <option value='PAYROLL_ADMIN'>Payroll Admin</option>
+                <option value='SUPER_ADMIN'>Super Admin</option>
+              </select>
+            </div>
+
+            {/* Photo */}
             <div className='form-group'>
               <label className='form-label'>Photo</label>
               <input className='form-control' type='file' accept='image/*' onChange={handlePhotoChange} />
             </div>
 
             {preview && (
-              <div className='form-group' style={{ justifyContent: 'center' }}>
+              <div className='form-group' style={{ display: 'flex', alignItems: 'center' }}>
                 <img src={preview} alt='preview' style={{ width: 56, height: 56, borderRadius: '50%', objectFit: 'cover', border: '3px solid var(--brand)' }} />
               </div>
             )}
+
           </div>
 
           <div className='modal__footer'>

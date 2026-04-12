@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getContact, updateContact, updatePhoto, deleteContact } from '../api/ContactService';
+import {
+  getEmployee, updateEmployee, updateEmployeePhoto, deleteContact,
+  getDepartments, getTeams,
+} from '../api/ContactService';
 import Spinner from '../components/Spinner';
 import TopBar from '../components/TopBar';
 
@@ -9,16 +12,18 @@ const FALLBACK = 'https://ui-avatars.com/api/?background=1a3a5c&color=fff&name='
 
 const TABS = ['Personal', 'Contact', 'Employment'];
 
-const Field = ({ label, name, type = 'text', value, onChange, options }) => (
+const Field = ({ label, name, type = 'text', value, onChange, options, disabled }) => (
   <div className='form-group'>
     <label className='form-label'>{label}</label>
     {options ? (
-      <select className='form-control' name={name} value={value || ''} onChange={onChange}>
+      <select className='form-control' name={name} value={value || ''} onChange={onChange} disabled={disabled}>
         <option value=''>— Select —</option>
-        {options.map(o => <option key={o} value={o}>{o}</option>)}
+        {options.map(o => (
+          <option key={o.value ?? o} value={o.value ?? o}>{o.label ?? o}</option>
+        ))}
       </select>
     ) : (
-      <input className='form-control' type={type} name={name} value={value || ''} onChange={onChange} />
+      <input className='form-control' type={type} name={name} value={value || ''} onChange={onChange} disabled={disabled} />
     )}
   </div>
 );
@@ -26,28 +31,81 @@ const Field = ({ label, name, type = 'text', value, onChange, options }) => (
 const EmployeeDetailsPage = ({ onContactUpdated }) => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [contact, setContact] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [photo, setPhoto] = useState(null);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [activeTab, setActiveTab] = useState('Personal');
 
-  useEffect(() => {
-    getContact(id).then(r => setContact(r.data)).catch(console.error);
+  const [employee, setEmployee]     = useState(null);
+  const [form, setForm]             = useState({});
+  const [departments, setDepartments] = useState([]);
+  const [teams, setTeams]           = useState([]);
+  const [preview, setPreview]       = useState(null);
+  const [photo, setPhoto]           = useState(null);
+  const [saving, setSaving]         = useState(false);
+  const [error, setError]           = useState(null);
+  const [success, setSuccess]       = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [activeTab, setActiveTab]   = useState('Personal');
+
+  const load = useCallback(async () => {
+    try {
+      const res = await getEmployee(id);
+      const emp = res.data?.data;
+      setEmployee(emp);
+      setForm({
+        firstName:        emp.firstName ?? '',
+        lastName:         emp.lastName ?? '',
+        email:            emp.email ?? '',
+        phone:            emp.phone ?? '',
+        dateOfBirth:      emp.dateOfBirth ?? '',
+        gender:           emp.gender ?? '',
+        nationality:      emp.nationality ?? '',
+        idNumber:         emp.idNumber ?? '',
+        address:          emp.address ?? '',
+        jobTitle:         emp.jobTitle ?? '',
+        employmentType:   emp.employmentType ?? '',
+        employmentStatus: emp.employmentStatus ?? '',
+        startDate:        emp.startDate ?? '',
+        endDate:          emp.endDate ?? '',
+        departmentId:     emp.department?.id ?? '',
+        teamId:           emp.team?.id ?? '',
+        managerId:        emp.manager?.id ?? '',
+        role:             emp.role ?? '',
+      });
+    } catch {
+      setError('Failed to load employee.');
+    }
   }, [id]);
 
-  if (!contact) return <Spinner />;
+  useEffect(() => { load(); }, [load]);
 
+  useEffect(() => {
+    getDepartments()
+      .then(r => setDepartments(r.data?.data ?? []))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!form.departmentId) { setTeams([]); return; }
+    getTeams(form.departmentId)
+      .then(r => setTeams(r.data?.data ?? []))
+      .catch(() => {});
+  }, [form.departmentId]);
+
+  if (!employee) return <Spinner />;
+
+  const fullName = `${employee.firstName ?? ''} ${employee.lastName ?? ''}`.trim();
   const photoSrc = preview
     ? preview
-    : contact.photoURL
-      ? `${API_URL}/contacts/image/${contact.photoURL}`
-      : `${FALLBACK}${encodeURIComponent(contact.name)}`;
+    : employee.profilePhoto
+      ? `${API_URL}/employees/photo/${employee.profilePhoto}`
+      : `${FALLBACK}${encodeURIComponent(fullName)}`;
 
-  const set = e => setContact({ ...contact, [e.target.name]: e.target.value });
+  const set = e => {
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+      ...(name === 'departmentId' ? { teamId: '' } : {}),
+    }));
+  };
 
   const handlePhotoChange = e => {
     const file = e.target.files[0];
@@ -61,22 +119,23 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
     setError(null);
     setSuccess(null);
     try {
-      let updated = { ...contact };
       if (photo) {
-        const fd = new FormData();
-        fd.append('id', contact.id);
-        fd.append('file', photo);
-        const res = await updatePhoto(fd);
-        updated = { ...updated, photoURL: res.data };
-        setContact(updated);
+        await updateEmployeePhoto(id, photo);
         setPreview(null);
         setPhoto(null);
       }
-      await updateContact(updated);
+      const payload = {
+        ...form,
+        departmentId: Number(form.departmentId),
+        teamId: Number(form.teamId),
+        managerId: form.managerId || null,
+      };
+      await updateEmployee(id, payload);
       setSuccess('Changes saved successfully.');
+      await load();
       onContactUpdated?.();
-    } catch {
-      setError('Failed to save. Please try again.');
+    } catch (err) {
+      setError(err.response?.data?.message ?? 'Failed to save. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -93,62 +152,64 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
     }
   };
 
-  const isActive = contact.status?.toLowerCase() === 'active';
+  const isActive = employee.employmentStatus?.toLowerCase() === 'active';
+
+  const deptOptions = departments.map(d => ({ value: d.id, label: d.name }));
+  const teamOptions = teams.map(t => ({ value: t.id, label: t.name }));
 
   return (
     <>
-      <TopBar title={contact.name} breadcrumb='Employee Hub / Employees / Profile' />
+      <TopBar title={fullName} breadcrumb='Employee Hub / Employees / Profile' />
       <div className='page'>
         <div className='profile-layout'>
 
           {/* ── Left Panel ── */}
           <div className='profile-card'>
             <label className='profile-card__photo-wrap' htmlFor='photo-upload'>
-              <img src={photoSrc} alt={contact.name} />
+              <img src={photoSrc} alt={fullName} />
               <span className='photo-overlay'><i className='bi bi-camera'></i></span>
             </label>
             <input id='photo-upload' type='file' accept='image/*' onChange={handlePhotoChange} style={{ display: 'none' }} />
 
             <div style={{ textAlign: 'center' }}>
-              <p className='profile-card__name'>{contact.name}</p>
-              {contact.title && <p className='profile-card__title'>{contact.title}</p>}
+              <p className='profile-card__name'>{fullName}</p>
+              {employee.jobTitle && <p className='profile-card__title'>{employee.jobTitle}</p>}
             </div>
 
             <span className={`badge badge--${isActive ? 'active' : 'inactive'}`}>
               <i className={`bi ${isActive ? 'bi-check-circle' : 'bi-x-circle'}`}></i>
-              {contact.status || 'Unknown'}
+              {employee.employmentStatus}
             </span>
 
-            {contact.employeeNumber && (
+            {employee.employeeNumber && (
               <p style={{ fontSize: '0.75rem', color: 'hsla(0,0%,100%,0.5)', marginTop: '-0.5rem' }}>
-                {contact.employeeNumber}
+                {employee.employeeNumber}
               </p>
             )}
 
-            {/* Quick info */}
             <div className='profile-card__meta'>
-              {contact.email && (
+              {employee.email && (
                 <div className='profile-card__meta-item'>
                   <i className='bi bi-envelope'></i>
-                  <span>{contact.email}</span>
+                  <span>{employee.email}</span>
                 </div>
               )}
-              {contact.phone && (
+              {employee.phone && (
                 <div className='profile-card__meta-item'>
                   <i className='bi bi-telephone'></i>
-                  <span>{contact.phone}</span>
+                  <span>{employee.phone}</span>
                 </div>
               )}
-              {contact.department && (
+              {employee.department?.name && (
                 <div className='profile-card__meta-item'>
                   <i className='bi bi-building'></i>
-                  <span>{contact.department}</span>
+                  <span>{employee.department.name}</span>
                 </div>
               )}
-              {contact.startDate && (
+              {employee.startDate && (
                 <div className='profile-card__meta-item'>
                   <i className='bi bi-calendar3'></i>
-                  <span>Since {contact.startDate}</span>
+                  <span>Since {employee.startDate}</span>
                 </div>
               )}
             </div>
@@ -163,7 +224,6 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
             {error   && <p className='feedback feedback--error'><i className='bi bi-exclamation-circle'></i> {error}</p>}
             {success && <p className='feedback feedback--success'><i className='bi bi-check-circle'></i> {success}</p>}
 
-            {/* Tabs */}
             <div className='profile-tabs'>
               {TABS.map(tab => (
                 <button
@@ -180,35 +240,53 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
 
               {activeTab === 'Personal' && (
                 <div className='form-grid'>
-                  <Field label='First Name'    name='firstName'   value={contact.firstName}   onChange={set} />
-                  <Field label='Last Name'     name='lastName'    value={contact.lastName}    onChange={set} />
-                  <Field label='Date of Birth' name='dateOfBirth' value={contact.dateOfBirth} onChange={set} type='date' />
-                  <Field label='Gender'        name='gender'      value={contact.gender}      onChange={set}
+                  <Field label='First Name'    name='firstName'   value={form.firstName}   onChange={set} />
+                  <Field label='Last Name'     name='lastName'    value={form.lastName}    onChange={set} />
+                  <Field label='Date of Birth' name='dateOfBirth' value={form.dateOfBirth} onChange={set} type='date' />
+                  <Field label='Gender'        name='gender'      value={form.gender}      onChange={set}
                     options={['Male', 'Female', 'Non-binary', 'Prefer not to say']} />
-                  <Field label='Nationality'   name='nationality' value={contact.nationality} onChange={set} />
-                  <Field label='SA ID Number'  name='idNumber'    value={contact.idNumber}    onChange={set} />
+                  <Field label='Nationality'   name='nationality' value={form.nationality} onChange={set} />
+                  <Field label='SA ID Number'  name='idNumber'    value={form.idNumber}    onChange={set} />
                 </div>
               )}
 
               {activeTab === 'Contact' && (
                 <div className='form-grid'>
-                  <Field label='Email'          name='email'   value={contact.email}   onChange={set} type='email' />
-                  <Field label='Phone'          name='phone'   value={contact.phone}   onChange={set} />
-                  <Field label='Address'        name='address' value={contact.address} onChange={set} />
+                  <Field label='Email'   name='email'   value={form.email}   onChange={set} type='email' />
+                  <Field label='Phone'   name='phone'   value={form.phone}   onChange={set} />
+                  <Field label='Address' name='address' value={form.address} onChange={set} />
                 </div>
               )}
 
               {activeTab === 'Employment' && (
                 <div className='form-grid'>
-                  <Field label='Job Title'        name='title'          value={contact.title}          onChange={set} />
-                  <Field label='Employee Number'  name='employeeNumber' value={contact.employeeNumber} onChange={set} />
-                  <Field label='Department'       name='department'     value={contact.department}     onChange={set} />
-                  <Field label='Team'             name='team'           value={contact.team}           onChange={set} />
-                  <Field label='Employment Type'  name='employmentType' value={contact.employmentType} onChange={set}
-                    options={['Full Time', 'Part Time']} />
-                  <Field label='Start Date'       name='startDate'      value={contact.startDate}      onChange={set} type='date' />
-                  <Field label='Status'           name='status'         value={contact.status}         onChange={set}
-                    options={['active', 'inactive', 'suspended', 'terminated']} />
+                  <Field label='Job Title'       name='jobTitle'         value={form.jobTitle}         onChange={set} />
+                  <Field label='Employee Number' name='employeeNumber'   value={employee.employeeNumber} onChange={() => {}} disabled />
+                  <Field label='Department'      name='departmentId'     value={form.departmentId}     onChange={set} options={deptOptions} />
+                  <Field label='Team'            name='teamId'           value={form.teamId}           onChange={set} options={teamOptions} disabled={!form.departmentId} />
+                  <Field label='Employment Type' name='employmentType'   value={form.employmentType}   onChange={set}
+                    options={[
+                      { value: 'FULL_TIME', label: 'Full Time' },
+                      { value: 'PART_TIME', label: 'Part Time' },
+                      { value: 'CONTRACT',  label: 'Contract' },
+                    ]} />
+                  <Field label='Status'          name='employmentStatus' value={form.employmentStatus} onChange={set}
+                    options={[
+                      { value: 'ACTIVE',      label: 'Active' },
+                      { value: 'INACTIVE',    label: 'Inactive' },
+                      { value: 'SUSPENDED',   label: 'Suspended' },
+                      { value: 'TERMINATED',  label: 'Terminated' },
+                    ]} />
+                  <Field label='Role'            name='role'             value={form.role}             onChange={set}
+                    options={[
+                      { value: 'EMPLOYEE',      label: 'Employee' },
+                      { value: 'MANAGER',       label: 'Manager' },
+                      { value: 'HR_ADMIN',      label: 'HR Admin' },
+                      { value: 'PAYROLL_ADMIN', label: 'Payroll Admin' },
+                      { value: 'SUPER_ADMIN',   label: 'Super Admin' },
+                    ]} />
+                  <Field label='Start Date' name='startDate' value={form.startDate} onChange={set} type='date' />
+                  <Field label='End Date'   name='endDate'   value={form.endDate}   onChange={set} type='date' />
                 </div>
               )}
 
@@ -231,7 +309,7 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
           <div className='confirm-box'>
             <div className='confirm-box__icon'><i className='bi bi-exclamation-triangle'></i></div>
             <h3>Delete Employee</h3>
-            <p>Are you sure you want to delete <strong>{contact.name}</strong>? This cannot be undone.</p>
+            <p>Are you sure you want to delete <strong>{fullName}</strong>? This cannot be undone.</p>
             <div className='confirm-box__actions'>
               <button onClick={() => setConfirmDelete(false)} className='btn btn-ghost'>Cancel</button>
               <button onClick={handleDelete} className='btn btn-danger'>Yes, Delete</button>

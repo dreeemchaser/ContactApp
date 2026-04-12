@@ -5,7 +5,7 @@ const FALLBACK = 'https://ui-avatars.com/api/?background=1a3a5c&color=fff&name='
 
 const EmployeeCard = ({ contact }) => {
   const photoSrc = contact.photoURL
-    ? `${API_URL}/contacts/image/${contact.photoURL}`
+    ? `${API_URL}/employees/photo/${contact.photoURL}`
     : `${FALLBACK}${encodeURIComponent(contact.name)}`;
 
   const isActive = contact.status?.toLowerCase() === 'active';
