@@ -3,6 +3,7 @@ package employeehub.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -32,12 +33,29 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**").permitAll()
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/v3/api-docs/**",
-                                "/actuator/health",
+                                "/swagger-ui/**", "/swagger-ui.html",
+                                "/v3/api-docs/**", "/actuator/health",
                                 "/employees/photo/**"
                         ).permitAll()
+
+                        // Departments & Teams — HR_ADMIN / SUPER_ADMIN manage, others read
+                        .requestMatchers(HttpMethod.GET, "/departments/**", "/teams/**").authenticated()
+                        .requestMatchers("/departments/**", "/teams/**")
+                                .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+
+                        // Employees — HR_ADMIN / SUPER_ADMIN manage, MANAGER reads
+                        .requestMatchers(HttpMethod.GET, "/employees/**").authenticated()
+                        .requestMatchers("/employees/**")
+                                .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+
+                        // Audit logs — HR_ADMIN / SUPER_ADMIN only
+                        .requestMatchers("/audit-logs/**")
+                                .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+
+                        // Salary — PAYROLL_ADMIN manages
+                        .requestMatchers("/salary/**")
+                                .hasAnyRole("PAYROLL_ADMIN", "HR_ADMIN", "SUPER_ADMIN")
+
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
