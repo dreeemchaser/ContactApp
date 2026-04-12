@@ -10,6 +10,7 @@ import employeehub.repository.DepartmentRepository;
 import employeehub.repository.EmployeeRepository;
 import employeehub.repository.TeamRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -21,6 +22,7 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final TeamRepository teamRepository;
+    @Lazy private final LeaveService leaveService;
 
     public Employee create(EmployeeRequest req) {
         if (employeeRepository.existsByEmail(req.getEmail())) {
@@ -28,7 +30,9 @@ public class EmployeeService {
         }
         Employee employee = mapToEmployee(new Employee(), req);
         employee.setEmployeeNumber(generateEmployeeNumber());
-        return employeeRepository.save(employee);
+        Employee saved = employeeRepository.save(employee);
+        leaveService.createBalancesForEmployee(saved);
+        return saved;
     }
 
     public Employee getById(String id) {
