@@ -1,23 +1,9 @@
 import { NavLink, useNavigate } from 'react-router-dom';
-import { logout } from '../api/AuthService';
-
-const NAV = [
-  { section: 'Main', links: [
-    { to: '/dashboard', icon: 'bi-grid-1x2', label: 'Dashboard' },
-    { to: '/employees', icon: 'bi-people', label: 'Employees' },
-  ]},
-  { section: 'Self Service', links: [
-    { to: '/leave', icon: 'bi-calendar-check', label: 'Leave' },
-    { to: '/timesheets', icon: 'bi-clock-history', label: 'Timesheets' },
-    { to: '/documents', icon: 'bi-folder2-open', label: 'Documents' },
-    { to: '/performance', icon: 'bi-graph-up-arrow', label: 'Performance' },
-    { to: '/salary', icon: 'bi-cash-coin', label: 'Salary' },
-    { to: '/benefits', icon: 'bi-shield-check', label: 'Benefits' },
-  ]},
-];
+import { logout, isHrOrAdmin } from '../api/AuthService';
 
 const Sidebar = ({ onLogout }) => {
   const navigate = useNavigate();
+  const hrOrAdmin = isHrOrAdmin();
 
   const handleLogout = () => {
     logout();
@@ -37,21 +23,32 @@ const Sidebar = ({ onLogout }) => {
       </div>
 
       <nav className='sidebar__nav'>
-        {NAV.map(({ section, links }) => (
-          <div key={section}>
-            <div className='sidebar__section-label'>{section}</div>
-            {links.map(({ to, icon, label }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) => `sidebar__link${isActive ? ' active' : ''}`}
-              >
-                <i className={`bi ${icon}`}></i>
-                {label}
-              </NavLink>
-            ))}
-          </div>
-        ))}
+        <div>
+          <div className='sidebar__section-label'>Main</div>
+          <NavLink to='/dashboard' className={({ isActive }) => `sidebar__link${isActive ? ' active' : ''}`}>
+            <i className='bi bi-grid-1x2'></i> Dashboard
+          </NavLink>
+          {hrOrAdmin && (
+            <NavLink to='/employees' className={({ isActive }) => `sidebar__link${isActive ? ' active' : ''}`}>
+              <i className='bi bi-people'></i> Employees
+            </NavLink>
+          )}
+        </div>
+        <div>
+          <div className='sidebar__section-label'>Self Service</div>
+          {[
+            { to: '/leave',        icon: 'bi-calendar-check',  label: 'Leave' },
+            { to: '/timesheets',   icon: 'bi-clock-history',   label: 'Timesheets' },
+            { to: '/documents',    icon: 'bi-folder2-open',    label: 'Documents' },
+            { to: '/performance',  icon: 'bi-graph-up-arrow',  label: 'Performance' },
+            { to: '/salary',       icon: 'bi-cash-coin',       label: 'Salary' },
+            { to: '/benefits',     icon: 'bi-shield-check',    label: 'Benefits' },
+          ].map(({ to, icon, label }) => (
+            <NavLink key={to} to={to} className={({ isActive }) => `sidebar__link${isActive ? ' active' : ''}`}>
+              <i className={`bi ${icon}`}></i> {label}
+            </NavLink>
+          ))}
+        </div>
       </nav>
 
       <div className='sidebar__footer'>

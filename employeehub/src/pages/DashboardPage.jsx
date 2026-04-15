@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import TopBar from '../components/TopBar';
 import { getEmployees, getMyLeaveRequests, getMyTimesheets, getMyDocuments, getMyNotifications, markNotificationRead } from '../api/ContactService';
+import { isHrOrAdmin } from '../api/AuthService';
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({ employees: '—', leave: '—', timesheets: '—', documents: '—' });
@@ -42,11 +43,13 @@ export default function DashboardPage() {
     }
   };
 
+  const hrOrAdmin = isHrOrAdmin();
+
   const STAT_CARDS = [
-    { icon: 'bi-people',        color: 'blue',  value: stats.employees,  label: 'Total Employees' },
-    { icon: 'bi-calendar-check',color: 'green', value: stats.leave,      label: 'Pending Leave' },
-    { icon: 'bi-clock-history', color: 'amber', value: stats.timesheets, label: 'Pending Timesheets' },
-    { icon: 'bi-folder2-open',  color: 'red',   value: stats.documents,  label: 'Documents Pending' },
+    ...(hrOrAdmin ? [{ icon: 'bi-people', color: 'blue', value: stats.employees, label: 'Total Employees' }] : []),
+    { icon: 'bi-calendar-check', color: 'green', value: stats.leave,      label: 'Pending Leave' },
+    { icon: 'bi-clock-history',  color: 'amber', value: stats.timesheets, label: 'Pending Timesheets' },
+    { icon: 'bi-folder2-open',   color: 'red',   value: stats.documents,  label: 'Documents Pending' },
   ];
 
   return (
