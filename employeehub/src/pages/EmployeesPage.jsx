@@ -1,45 +1,69 @@
+import { useState, useEffect, useCallback } from 'react';
 import EmployeeCard from '../components/EmployeeCard';
 import Spinner from '../components/Spinner';
 import TopBar from '../components/TopBar';
 import NewContactModal from '../components/NewContactModal';
+import { getContacts } from '../api/ContactService';
 
-const EmployeesPage = ({ data, currentPage, getAllContacts, loading }) => (
-  <>
-    <TopBar title='Employees' breadcrumb='Employee Hub / Employees'>
-      <NewContactModal onContactSaved={getAllContacts} />
-    </TopBar>
+const EmployeesPage = () => {
+  const [data, setData]           = useState({});
+  const [currentPage, setCurrentPage] = useState(0);
+  const [loading, setLoading]     = useState(true);
 
-    <div className='page'>
-      {loading ? (
-        <Spinner />
-      ) : (
-        <>
-          {data?.content?.length === 0 && (
-            <div className='empty-state'>
-              <i className='bi bi-people'></i>
-              <p>No employees yet. Add your first employee to get started.</p>
-            </div>
-          )}
+  const load = useCallback(async (page = 0) => {
+    setLoading(true);
+    try {
+      const res = await getContacts(page);
+      setData(res.data);
+      setCurrentPage(page);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-          <div className='contact__list'>
-            {data?.content?.map(contact => (
-              <EmployeeCard contact={contact} key={contact.id} />
-            ))}
-          </div>
+  useEffect(() => { load(0); }, [load]);
 
-          {data?.content?.length > 0 && data?.page?.totalPages > 1 && (
-            <div className='pagination'>
-              <button onClick={() => getAllContacts(currentPage - 1)} disabled={currentPage === 0}>&laquo;</button>
-              {[...Array(data.page.totalPages).keys()].map(p => (
-                <button onClick={() => getAllContacts(p)} className={currentPage === p ? 'active' : ''} key={p}>{p + 1}</button>
+  const content    = data?.content ?? [];
+  const totalPages = data?.totalPages ?? 0;
+
+  return (
+    <>
+      <TopBar title='Employees' breadcrumb='Employee Hub / Employees'>
+        <NewContactModal onContactSaved={() => load(currentPage)} />
+      </TopBar>
+
+      <div className='page'>
+        {loading ? (
+          <Spinner />
+        ) : (
+          <>
+            {content.length === 0 && (
+              <div className='empty-state'>
+                <i className='bi bi-people'></i>
+                <p>No employees yet. Add your first employee to get started.</p>
+              </div>
+            )}
+
+            <div className='contact__list'>
+              {content.map(contact => (
+                <EmployeeCard contact={contact} key={contact.id} />
               ))}
-              <button onClick={() => getAllContacts(currentPage + 1)} disabled={data.page.totalPages === currentPage + 1}>&raquo;</button>
             </div>
-          )}
-        </>
-      )}
-    </div>
-  </>
-);
+
+            {totalPages > 1 && (
+              <div className='pagination'>
+                <a className={currentPage === 0 ? 'disabled' : ''} onClick={() => load(currentPage - 1)}>‹</a>
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <a key={i} className={i === currentPage ? 'active' : ''} onClick={() => load(i)}>{i + 1}</a>
+                ))}
+                <a className={currentPage === totalPages - 1 ? 'disabled' : ''} onClick={() => load(currentPage + 1)}>›</a>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+};
 
 export default EmployeesPage;

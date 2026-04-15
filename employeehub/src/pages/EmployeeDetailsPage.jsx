@@ -4,6 +4,7 @@ import {
   getEmployee, updateEmployee, updateEmployeePhoto, deleteContact,
   getDepartments, getTeams,
 } from '../api/ContactService';
+import { isHrOrAdmin } from '../api/AuthService';
 import Spinner from '../components/Spinner';
 import TopBar from '../components/TopBar';
 
@@ -28,7 +29,7 @@ const Field = ({ label, name, type = 'text', value, onChange, options, disabled 
   </div>
 );
 
-const EmployeeDetailsPage = ({ onContactUpdated }) => {
+const EmployeeDetailsPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
 
@@ -133,7 +134,6 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
       await updateEmployee(id, payload);
       setSuccess('Changes saved successfully.');
       await load();
-      onContactUpdated?.();
     } catch (err) {
       setError(err.response?.data?.message ?? 'Failed to save. Please try again.');
     } finally {
@@ -144,7 +144,6 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
   const handleDelete = async () => {
     try {
       await deleteContact(id);
-      onContactUpdated?.();
       navigate('/employees');
     } catch {
       setError('Failed to delete employee.');
@@ -153,6 +152,7 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
   };
 
   const isActive = employee.employmentStatus?.toLowerCase() === 'active';
+  const canDelete = isHrOrAdmin();
 
   const deptOptions = departments.map(d => ({ value: d.id, label: d.name }));
   const teamOptions = teams.map(t => ({ value: t.id, label: t.name }));
@@ -293,9 +293,11 @@ const EmployeeDetailsPage = ({ onContactUpdated }) => {
             </div>
 
             <div className='profile-form-actions'>
-              <button onClick={() => setConfirmDelete(true)} className='btn btn-danger btn-sm'>
-                <i className='bi bi-trash'></i> Delete
-              </button>
+              {canDelete && (
+                <button onClick={() => setConfirmDelete(true)} className='btn btn-danger btn-sm'>
+                  <i className='bi bi-trash'></i> Delete
+                </button>
+              )}
               <button onClick={handleSave} className='btn btn-sm' disabled={saving}>
                 {saving ? 'Saving...' : <><i className='bi bi-save'></i> Save Changes</>}
               </button>
