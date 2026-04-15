@@ -1,0 +1,81 @@
+import axios from 'axios';
+import { getToken } from './AuthService';
+
+const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080';
+
+const auth = () => ({ headers: { Authorization: `Bearer ${getToken()}` } });
+
+// ── Employees ────────────────────────────────────────────────────────────────
+
+export async function getEmployees(page = 0, size = 10) {
+  return axios.get(`${BASE_URL}/employees?page=${page}&size=${size}`, auth());
+}
+
+// ── Leave ────────────────────────────────────────────────────────────────────
+
+export async function getAllLeaveRequests() {
+  return axios.get(`${BASE_URL}/leave/requests`, auth());
+}
+
+export async function approveLeave(id) {
+  return axios.patch(`${BASE_URL}/leave/requests/${id}/approve`, {}, auth());
+}
+
+export async function rejectLeave(id) {
+  return axios.patch(`${BASE_URL}/leave/requests/${id}/reject`, {}, auth());
+}
+
+// ── Timesheets ───────────────────────────────────────────────────────────────
+
+export async function getAllTimesheets() {
+  return axios.get(`${BASE_URL}/timesheets`, auth());
+}
+
+export async function approveTimesheet(id) {
+  return axios.patch(`${BASE_URL}/timesheets/${id}/approve`, {}, auth());
+}
+
+// ── Documents ────────────────────────────────────────────────────────────────
+
+export async function getAllDocuments() {
+  return axios.get(`${BASE_URL}/documents`, auth());
+}
+
+export async function verifyDocument(id) {
+  return axios.patch(`${BASE_URL}/documents/${id}/verify`, {}, auth());
+}
+
+// ── Audit Logs ───────────────────────────────────────────────────────────────
+
+export async function getAuditLogs(page = 0, size = 20) {
+  return axios.get(`${BASE_URL}/audit-logs?page=${page}&size=${size}`, auth());
+}
+
+// ── Dashboard Stats ───────────────────────────────────────────────────────────
+
+export async function getDashboardStats() {
+  const [empRes, leaveRes, tsRes, docRes] = await Promise.allSettled([
+    getEmployees(0, 1),
+    getAllLeaveRequests(),
+    getAllTimesheets(),
+    getAllDocuments(),
+  ]);
+
+  console.debug('[HR Stats] employees:', empRes.status, empRes.value?.data ?? empRes.reason?.response?.data);
+  console.debug('[HR Stats] leave:', leaveRes.status, leaveRes.value?.data ?? leaveRes.reason?.response?.data);
+  console.debug('[HR Stats] timesheets:', tsRes.status, tsRes.value?.data ?? tsRes.reason?.response?.data);
+  console.debug('[HR Stats] documents:', docRes.status, docRes.value?.data ?? docRes.reason?.response?.data);
+
+  const empData    = empRes.value?.data?.data ?? empRes.value?.data;
+  const employees  = empRes.status === 'fulfilled' ? (empData?.totalElements ?? '—') : '—';
+  const leaveData  = leaveRes.status === 'fulfilled' ? (leaveRes.value.data?.data ?? []) : [];
+  const tsData     = tsRes.status    === 'fulfilled' ? (tsRes.value.data?.data ?? []) : [];
+  const docData    = docRes.status   === 'fulfilled' ? (docRes.value.data?.data ?? []) : [];
+
+  return {
+    employees,
+    pendingLeave:       leaveData.filter(r => r.status === 'PENDING').length,
+    pendingTimesheets:  tsData.filter(t => t.status === 'SUBMITTED').length,
+    pendingDocuments:   docData.filter(d => d.status === 'PENDING').length,
+  };
+}
