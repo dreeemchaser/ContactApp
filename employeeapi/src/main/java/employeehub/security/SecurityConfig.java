@@ -43,10 +43,21 @@ public class SecurityConfig {
                         .requestMatchers("/departments/**", "/teams/**")
                                 .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
 
-                        // Employees — HR_ADMIN / SUPER_ADMIN manage, MANAGER reads
+                        // Employees — HR_ADMIN / SUPER_ADMIN manage, all authenticated can GET own
                         .requestMatchers(HttpMethod.GET, "/employees/**").authenticated()
-                        .requestMatchers("/employees/**")
-                                .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/employees/**").hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/employees").hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/employees/**").hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+                        .requestMatchers(HttpMethod.PATCH, "/employees/**").hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
+
+                        // Leave — employees manage own, HR sees all
+                        .requestMatchers(HttpMethod.GET, "/leave/requests").hasAnyRole("HR_ADMIN", "SUPER_ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PATCH, "/leave/requests/*/approve", "/leave/requests/*/reject")
+                                .hasAnyRole("HR_ADMIN", "SUPER_ADMIN", "MANAGER")
+
+                        // Timesheets — employees manage own, HR sees all
+                        .requestMatchers(HttpMethod.GET, "/timesheets").hasAnyRole("HR_ADMIN", "SUPER_ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PATCH, "/timesheets/*/approve").hasAnyRole("HR_ADMIN", "SUPER_ADMIN", "MANAGER")
 
                         // Documents — HR_ADMIN manages, employees upload/view own
                         .requestMatchers(HttpMethod.GET, "/documents").hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
