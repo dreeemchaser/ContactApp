@@ -38,7 +38,8 @@ export default function TimesheetsPage() {
     setFeedback(null);
     try {
       const weekStart = getMonday();
-      const tsRes = await createTimesheet({ weekStartDate: weekStart });
+      const weekEnd = getSunday();
+      const tsRes = await createTimesheet({ weekStartDate: weekStart, weekEndDate: weekEnd });
       const tsId = tsRes.data?.data?.id;
       for (const entry of entries) {
         if (parseFloat(entry.hours) > 0) {
@@ -167,6 +168,14 @@ function getMonday() {
   const d = new Date();
   const day = d.getDay();
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  d.setDate(diff);
+  return d.toISOString().split('T')[0];
+}
+
+function getSunday() {
+  const d = new Date();
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? 0 : 7);
   d.setDate(diff);
   return d.toISOString().split('T')[0];
 }
