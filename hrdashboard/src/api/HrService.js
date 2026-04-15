@@ -61,11 +61,6 @@ export async function getDashboardStats() {
     getAllDocuments(),
   ]);
 
-  console.debug('[HR Stats] employees:', empRes.status, empRes.value?.data ?? empRes.reason?.response?.data);
-  console.debug('[HR Stats] leave:', leaveRes.status, leaveRes.value?.data ?? leaveRes.reason?.response?.data);
-  console.debug('[HR Stats] timesheets:', tsRes.status, tsRes.value?.data ?? tsRes.reason?.response?.data);
-  console.debug('[HR Stats] documents:', docRes.status, docRes.value?.data ?? docRes.reason?.response?.data);
-
   const empData    = empRes.value?.data?.data ?? empRes.value?.data;
   const employees  = empRes.status === 'fulfilled' ? (empData?.totalElements ?? '—') : '—';
   const leaveData  = leaveRes.status === 'fulfilled' ? (leaveRes.value.data?.data ?? []) : [];
