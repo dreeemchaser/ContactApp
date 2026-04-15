@@ -57,7 +57,8 @@ public class SecurityConfig {
                         .requestMatchers("/audit-logs/**")
                                 .hasAnyRole("HR_ADMIN", "SUPER_ADMIN")
 
-                        // Salary — PAYROLL_ADMIN manages
+                        // Salary — employees view own payslips, admins manage
+                        .requestMatchers(HttpMethod.GET, "/salary/payslips/my").authenticated()
                         .requestMatchers("/salary/**")
                                 .hasAnyRole("PAYROLL_ADMIN", "HR_ADMIN", "SUPER_ADMIN")
 
