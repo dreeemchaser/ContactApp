@@ -11,17 +11,9 @@ import java.time.LocalDateTime;
 
 public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
 
-    @Query(value = "SELECT * FROM audit_logs a WHERE " +
-           "(:entityType IS NULL OR a.entity_type = :entityType) AND " +
-           "(:employeeId IS NULL OR a.performed_by_id = :employeeId) AND " +
-           "(:from IS NULL OR a.timestamp >= CAST(:from AS TIMESTAMP)) AND " +
-           "(:to IS NULL OR a.timestamp <= CAST(:to AS TIMESTAMP))",
-           countQuery = "SELECT COUNT(*) FROM audit_logs a WHERE " +
-           "(:entityType IS NULL OR a.entity_type = :entityType) AND " +
-           "(:employeeId IS NULL OR a.performed_by_id = :employeeId) AND " +
-           "(:from IS NULL OR a.timestamp >= CAST(:from AS TIMESTAMP)) AND " +
-           "(:to IS NULL OR a.timestamp <= CAST(:to AS TIMESTAMP))",
-           nativeQuery = true)
+    @Query("SELECT a FROM AuditLog a WHERE " +
+           "(:entityType IS NULL OR a.entityType = :entityType) AND " +
+           "(:employeeId IS NULL OR a.performedBy.id = :employeeId)")
     Page<AuditLog> findAllFiltered(
             @Param("entityType") String entityType,
             @Param("employeeId") String employeeId,
