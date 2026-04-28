@@ -5,7 +5,7 @@ import employeehub.domain.PerformanceGoal;
 import employeehub.domain.PerformanceReview;
 import employeehub.domain.enums.PerformanceGoalStatus;
 import employeehub.dto.*;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.PerformanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +26,7 @@ import java.util.Map;
 public class PerformanceController {
 
     private final PerformanceService performanceService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     // ── Cycles ───────────────────────────────────────────────────────
 
@@ -50,7 +50,7 @@ public class PerformanceController {
     public ResponseEntity<ApiResponse<PerformanceGoal>> createGoal(
             @RequestBody PerformanceGoalRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var creator = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var creator = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(performanceService.createGoal(request, creator.getId())));
     }
@@ -58,7 +58,7 @@ public class PerformanceController {
     @GetMapping("/goals/my")
     @Operation(summary = "Get current employee's goals")
     public ResponseEntity<ApiResponse<List<PerformanceGoal>>> getMyGoals(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(performanceService.getMyGoals(employee.getId())));
     }
 
@@ -78,7 +78,7 @@ public class PerformanceController {
     public ResponseEntity<ApiResponse<PerformanceReview>> createReview(
             @RequestBody PerformanceReviewRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var reviewer = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var reviewer = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(performanceService.createReview(request, reviewer.getId())));
     }
@@ -86,7 +86,7 @@ public class PerformanceController {
     @GetMapping("/reviews/my")
     @Operation(summary = "Get current employee's reviews")
     public ResponseEntity<ApiResponse<List<PerformanceReview>>> getMyReviews(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(performanceService.getMyReviews(employee.getId())));
     }
 
@@ -95,7 +95,7 @@ public class PerformanceController {
     public ResponseEntity<ApiResponse<PerformanceReview>> acknowledge(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(performanceService.acknowledge(id, employee.getId())));
     }
 }

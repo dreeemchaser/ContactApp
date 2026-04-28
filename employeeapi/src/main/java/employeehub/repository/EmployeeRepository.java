@@ -26,6 +26,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, String> {
             @Param("status") EmploymentStatus status,
             Pageable pageable);
 
-    @Query("SELECT COUNT(e) FROM Employee e")
-    long countAll();
+    @Query("SELECT MAX(CAST(SUBSTRING(e.employeeNumber, 5) AS int)) FROM Employee e WHERE e.employeeNumber LIKE 'EMP-%'")
+    Optional<Integer> findMaxEmployeeSequence();
 }

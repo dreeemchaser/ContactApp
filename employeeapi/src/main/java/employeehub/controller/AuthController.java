@@ -2,18 +2,17 @@ package employeehub.controller;
 
 import employeehub.domain.Employee;
 import employeehub.dto.ApiResponse;
-import employeehub.repository.EmployeeRepository;
+import employeehub.dto.MeResponse;
 import employeehub.security.JwtUtil;
+import employeehub.service.EmployeeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -24,8 +23,7 @@ import java.util.Map;
 @Tag(name = "Authentication")
 public class AuthController {
 
-    private final EmployeeRepository employeeRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final EmployeeService employeeService;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
@@ -35,26 +33,15 @@ public class AuthController {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(body.get("email"), body.get("password"))
         );
-        Employee employee = employeeRepository.findByEmail(body.get("email")).orElseThrow();
+        Employee employee = employeeService.getByEmail(body.get("email"));
         String token = jwtUtil.generateToken(employee.getEmail(), employee.getRole().name());
         return ResponseEntity.ok(ApiResponse.ok(Map.of("token", token)));
     }
 
     @GetMapping("/me")
     @Operation(summary = "Get current authenticated employee profile")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> me(@AuthenticationPrincipal UserDetails userDetails) {
-        Employee employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
-        Map<String, Object> profile = Map.ofEntries(
-                Map.entry("id", employee.getId()),
-                Map.entry("employeeNumber", employee.getEmployeeNumber()),
-                Map.entry("firstName", employee.getFirstName()),
-                Map.entry("lastName", employee.getLastName()),
-                Map.entry("email", employee.getEmail()),
-                Map.entry("jobTitle", employee.getJobTitle()),
-                Map.entry("role", employee.getRole()),
-                Map.entry("employmentStatus", employee.getEmploymentStatus()),
-                Map.entry("profilePhoto", employee.getProfilePhoto() != null ? employee.getProfilePhoto() : "")
-        );
-        return ResponseEntity.ok(ApiResponse.ok(profile));
+    public ResponseEntity<ApiResponse<MeResponse>> me(@AuthenticationPrincipal UserDetails userDetails) {
+        Employee employee = employeeService.getByEmail(userDetails.getUsername());
+        return ResponseEntity.ok(ApiResponse.ok(new MeResponse(employee)));
     }
 }

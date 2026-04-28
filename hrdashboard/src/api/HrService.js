@@ -21,8 +21,8 @@ export async function approveLeave(id) {
   return axios.patch(`${BASE_URL}/leave/requests/${id}/approve`, {}, auth());
 }
 
-export async function rejectLeave(id) {
-  return axios.patch(`${BASE_URL}/leave/requests/${id}/reject`, {}, auth());
+export async function rejectLeave(id, reason) {
+  return axios.patch(`${BASE_URL}/leave/requests/${id}/reject`, { reason }, auth());
 }
 
 // ── Timesheets ───────────────────────────────────────────────────────────────
@@ -33,6 +33,10 @@ export async function getAllTimesheets() {
 
 export async function approveTimesheet(id) {
   return axios.patch(`${BASE_URL}/timesheets/${id}/approve`, {}, auth());
+}
+
+export async function rejectTimesheet(id, reason) {
+  return axios.patch(`${BASE_URL}/timesheets/${id}/reject`, { reason }, auth());
 }
 
 // ── Documents ────────────────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import employeehub.domain.LeaveBalance;
 import employeehub.domain.LeaveRequest;
 import employeehub.dto.ApiResponse;
 import employeehub.dto.LeaveRequestDto;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.LeaveService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,19 +25,19 @@ import java.util.Map;
 public class LeaveController {
 
     private final LeaveService leaveService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @GetMapping("/requests")
     @Operation(summary = "Get all leave requests (HR/Manager filtered)")
     public ResponseEntity<ApiResponse<List<LeaveRequest>>> getAll(@AuthenticationPrincipal UserDetails userDetails) {
-        var requester = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var requester = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(leaveService.getAllRequests(requester)));
     }
 
     @GetMapping("/requests/my")
     @Operation(summary = "Get current employee's leave requests")
     public ResponseEntity<ApiResponse<List<LeaveRequest>>> getMy(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(leaveService.getMyRequests(employee.getId())));
     }
 
@@ -46,7 +46,7 @@ public class LeaveController {
     public ResponseEntity<ApiResponse<LeaveRequest>> submit(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody LeaveRequestDto dto) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(leaveService.submit(employee.getId(), dto)));
     }
@@ -56,7 +56,7 @@ public class LeaveController {
     public ResponseEntity<ApiResponse<LeaveRequest>> approve(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var approver = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var approver = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(leaveService.approve(id, approver.getId())));
     }
 
@@ -66,7 +66,7 @@ public class LeaveController {
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
-        var approver = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var approver = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(leaveService.reject(id, approver.getId(), body.get("reason"))));
     }
 
@@ -75,7 +75,7 @@ public class LeaveController {
     public ResponseEntity<ApiResponse<Void>> cancel(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         leaveService.cancel(id, employee.getId());
         return ResponseEntity.ok(ApiResponse.ok("Leave request cancelled", null));
     }
@@ -83,7 +83,7 @@ public class LeaveController {
     @GetMapping("/balances/my")
     @Operation(summary = "Get current employee's leave balances")
     public ResponseEntity<ApiResponse<List<LeaveBalance>>> getMyBalances(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(leaveService.getMyBalances(employee.getId())));
     }
 }

@@ -62,7 +62,6 @@ public class TimesheetService {
                 timesheet.getEntries().stream()
                         .map(TimesheetEntry::getHoursWorked)
                         .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add)
-                        .add(req.getHoursWorked())
         );
 
         return timesheetRepository.save(timesheet);
@@ -84,6 +83,7 @@ public class TimesheetService {
         return saved;
     }
 
+    @Transactional
     public Timesheet approve(String timesheetId, String approverId) {
         Timesheet timesheet = findTimesheet(timesheetId);
         validateApprover(timesheet, approverId);
@@ -93,6 +93,7 @@ public class TimesheetService {
         return timesheetRepository.save(timesheet);
     }
 
+    @Transactional
     public Timesheet reject(String timesheetId, String approverId, String reason) {
         Timesheet timesheet = findTimesheet(timesheetId);
         validateApprover(timesheet, approverId);

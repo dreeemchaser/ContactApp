@@ -4,7 +4,7 @@ import employeehub.domain.BenefitApplication;
 import employeehub.domain.BenefitType;
 import employeehub.domain.EmployeeBenefit;
 import employeehub.dto.ApiResponse;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.BenefitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +25,7 @@ import java.util.Map;
 public class BenefitController {
 
     private final BenefitService benefitService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @GetMapping
     @Operation(summary = "List all available benefit types")
@@ -36,7 +36,7 @@ public class BenefitController {
     @GetMapping("/my")
     @Operation(summary = "Get current employee's active benefits")
     public ResponseEntity<ApiResponse<List<EmployeeBenefit>>> getMy(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(benefitService.getMyBenefits(employee.getId())));
     }
 
@@ -45,7 +45,7 @@ public class BenefitController {
     public ResponseEntity<ApiResponse<BenefitApplication>> apply(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, Long> body) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(benefitService.apply(employee.getId(), body.get("benefitTypeId"))));
     }
@@ -55,7 +55,7 @@ public class BenefitController {
     public ResponseEntity<ApiResponse<BenefitApplication>> approve(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var reviewer = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var reviewer = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(benefitService.approve(id, reviewer.getId())));
     }
 
@@ -64,7 +64,7 @@ public class BenefitController {
     public ResponseEntity<ApiResponse<BenefitApplication>> reject(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var reviewer = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var reviewer = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(benefitService.reject(id, reviewer.getId())));
     }
 }

@@ -4,7 +4,7 @@ import employeehub.domain.PaySlip;
 import employeehub.domain.SalaryIncreaseRequest;
 import employeehub.domain.SalaryRecord;
 import employeehub.dto.*;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.SalaryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,7 +25,7 @@ import java.util.Map;
 public class SalaryController {
 
     private final SalaryService salaryService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     // ── Salary Records ───────────────────────────────────────────────
 
@@ -34,7 +34,7 @@ public class SalaryController {
     public ResponseEntity<ApiResponse<SalaryRecord>> createRecord(
             @RequestBody SalaryRecordRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var creator = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var creator = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(salaryService.createRecord(request, creator.getId())));
     }
@@ -52,7 +52,7 @@ public class SalaryController {
     public ResponseEntity<ApiResponse<PaySlip>> generatePaySlip(
             @RequestBody PaySlipGenerateRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var generator = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var generator = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(salaryService.generatePaySlip(request, generator.getId())));
     }
@@ -60,7 +60,7 @@ public class SalaryController {
     @GetMapping("/payslips/my")
     @Operation(summary = "Get current employee's payslips")
     public ResponseEntity<ApiResponse<List<PaySlip>>> getMyPaySlips(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(salaryService.getMyPaySlips(employee.getId())));
     }
 
@@ -77,7 +77,7 @@ public class SalaryController {
     public ResponseEntity<ApiResponse<SalaryIncreaseRequest>> submitIncreaseRequest(
             @RequestBody SalaryIncreaseRequestDto request,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var requester = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var requester = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(salaryService.submitIncreaseRequest(request, requester.getId())));
     }
@@ -87,7 +87,7 @@ public class SalaryController {
     public ResponseEntity<ApiResponse<SalaryIncreaseRequest>> approveIncreaseRequest(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var reviewer = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var reviewer = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(salaryService.approveIncreaseRequest(id, reviewer.getId())));
     }
 
@@ -97,7 +97,7 @@ public class SalaryController {
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
-        var reviewer = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var reviewer = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(salaryService.rejectIncreaseRequest(id, reviewer.getId(), body.get("reason"))));
     }
 }

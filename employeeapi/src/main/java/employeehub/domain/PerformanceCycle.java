@@ -2,13 +2,17 @@ package employeehub.domain;
 
 import employeehub.domain.enums.PerformanceCycleStatus;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
 @Entity
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @Table(name = "performance_cycles")
 public class PerformanceCycle {

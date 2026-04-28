@@ -10,6 +10,7 @@ import employeehub.exception.ResourceNotFoundException;
 import employeehub.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -34,6 +35,7 @@ public class SalaryService {
 
     // ── Salary Records ───────────────────────────────────────────────
 
+    @Transactional
     public SalaryRecord createRecord(SalaryRecordRequest req, String createdById) {
         Employee employee = findEmployee(req.getEmployeeId());
         Employee createdBy = findEmployee(createdById);
@@ -131,6 +133,7 @@ public class SalaryService {
         return increaseRequestRepository.save(request);
     }
 
+    @Transactional
     public SalaryIncreaseRequest approveIncreaseRequest(String id, String reviewerId) {
         SalaryIncreaseRequest request = findIncreaseRequest(id);
         Employee reviewer = findEmployee(reviewerId);

@@ -4,7 +4,7 @@ import employeehub.domain.Timesheet;
 import employeehub.dto.ApiResponse;
 import employeehub.dto.TimesheetEntryRequest;
 import employeehub.dto.TimesheetRequest;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.TimesheetService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -25,19 +25,19 @@ import java.util.Map;
 public class TimesheetController {
 
     private final TimesheetService timesheetService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @GetMapping("/my")
     @Operation(summary = "Get current employee's timesheets")
     public ResponseEntity<ApiResponse<List<Timesheet>>> getMy(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(timesheetService.getMy(employee.getId())));
     }
 
     @GetMapping
     @Operation(summary = "Get all timesheets (Manager/HR filtered by team)")
     public ResponseEntity<ApiResponse<List<Timesheet>>> getAll(@AuthenticationPrincipal UserDetails userDetails) {
-        var requester = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var requester = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(timesheetService.getAll(requester)));
     }
 
@@ -46,7 +46,7 @@ public class TimesheetController {
     public ResponseEntity<ApiResponse<Timesheet>> create(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody TimesheetRequest request) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(timesheetService.create(employee.getId(), request)));
     }
@@ -57,7 +57,7 @@ public class TimesheetController {
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody TimesheetEntryRequest request) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(timesheetService.addEntry(id, employee.getId(), request)));
     }
@@ -67,7 +67,7 @@ public class TimesheetController {
     public ResponseEntity<ApiResponse<Timesheet>> submit(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(timesheetService.submit(id, employee.getId())));
     }
 
@@ -76,7 +76,7 @@ public class TimesheetController {
     public ResponseEntity<ApiResponse<Timesheet>> approve(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var approver = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var approver = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(timesheetService.approve(id, approver.getId())));
     }
 
@@ -86,7 +86,7 @@ public class TimesheetController {
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, String> body) {
-        var approver = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var approver = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(timesheetService.reject(id, approver.getId(), body.get("reason"))));
     }
 }

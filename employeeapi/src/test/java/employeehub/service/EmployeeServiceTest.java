@@ -68,7 +68,7 @@ class EmployeeServiceTest {
         when(employeeRepository.existsByEmail(anyString())).thenReturn(false);
         when(departmentRepository.findById(1L)).thenReturn(Optional.of(department));
         when(teamRepository.findById(1L)).thenReturn(Optional.of(team));
-        when(employeeRepository.countAll()).thenReturn(0L);
+        when(employeeRepository.findMaxEmployeeSequence()).thenReturn(Optional.empty());
         when(employeeRepository.save(any())).thenAnswer(i -> i.getArgument(0));
 
         Employee result = employeeService.create(request);

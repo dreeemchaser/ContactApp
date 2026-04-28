@@ -2,7 +2,7 @@ package employeehub.controller;
 
 import employeehub.domain.Notification;
 import employeehub.dto.ApiResponse;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,12 +21,12 @@ import java.util.List;
 public class NotificationController {
 
     private final NotificationService notificationService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @GetMapping("/my")
     @Operation(summary = "Get current employee's notifications")
     public ResponseEntity<ApiResponse<List<Notification>>> getMy(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(notificationService.getMy(employee.getId())));
     }
 
@@ -35,14 +35,14 @@ public class NotificationController {
     public ResponseEntity<ApiResponse<Notification>> markAsRead(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(notificationService.markAsRead(id, employee.getId())));
     }
 
     @PatchMapping("/read-all")
     @Operation(summary = "Mark all notifications as read")
     public ResponseEntity<ApiResponse<Void>> markAllAsRead(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         notificationService.markAllAsRead(employee.getId());
         return ResponseEntity.ok(ApiResponse.ok("All notifications marked as read", null));
     }

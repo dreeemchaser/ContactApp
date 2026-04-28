@@ -48,6 +48,11 @@ public class EmployeeService {
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found: " + id));
     }
 
+    public Employee getByEmail(String email) {
+        return employeeRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee not found for email: " + email));
+    }
+
     public Page<Employee> getAll(Long departmentId, Long teamId, EmploymentStatus status, Pageable pageable) {
         return employeeRepository.findAllFiltered(departmentId, teamId, status, pageable);
     }
@@ -115,7 +120,9 @@ public class EmployeeService {
     }
 
     private String generateEmployeeNumber() {
-        long count = employeeRepository.countAll() + 1;
-        return String.format("EMP-%03d", count);
+        int next = employeeRepository.findMaxEmployeeSequence()
+                .map(max -> max + 1)
+                .orElse(1);
+        return String.format("EMP-%03d", next);
     }
 }

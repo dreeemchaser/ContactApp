@@ -59,8 +59,9 @@ public class DocumentService {
 
     public Document verify(String documentId, String verifierId) {
         Document doc = findDocument(documentId);
+        Employee verifier = findEmployee(verifierId);
         doc.setStatus(DocumentStatus.VERIFIED);
-        doc.setVerifiedBy(findEmployee(verifierId));
+        doc.setVerifiedBy(verifier);
         doc.setVerifiedAt(LocalDateTime.now());
         Document saved = documentRepository.save(doc);
 
@@ -68,14 +69,15 @@ public class DocumentService {
                 "Document Verified",
                 "Your document '" + doc.getFileName() + "' has been verified",
                 NotificationType.DOCUMENT, "Document", saved.getId());
-        auditService.log(findEmployee(verifierId), "VERIFY", "Document", saved.getId(), "PENDING", "VERIFIED");
+        auditService.log(verifier, "VERIFY", "Document", saved.getId(), "PENDING", "VERIFIED");
         return saved;
     }
 
     public Document reject(String documentId, String verifierId) {
         Document doc = findDocument(documentId);
+        Employee verifier = findEmployee(verifierId);
         doc.setStatus(DocumentStatus.REJECTED);
-        doc.setVerifiedBy(findEmployee(verifierId));
+        doc.setVerifiedBy(verifier);
         doc.setVerifiedAt(LocalDateTime.now());
         Document saved = documentRepository.save(doc);
 
@@ -83,7 +85,7 @@ public class DocumentService {
                 "Document Rejected",
                 "Your document '" + doc.getFileName() + "' has been rejected",
                 NotificationType.DOCUMENT, "Document", saved.getId());
-        auditService.log(findEmployee(verifierId), "REJECT", "Document", saved.getId(), "PENDING", "REJECTED");
+        auditService.log(verifier, "REJECT", "Document", saved.getId(), "PENDING", "REJECTED");
         return saved;
     }
 

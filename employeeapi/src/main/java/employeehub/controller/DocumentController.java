@@ -3,7 +3,7 @@ package employeehub.controller;
 import employeehub.domain.Document;
 import employeehub.domain.enums.DocumentType;
 import employeehub.dto.ApiResponse;
-import employeehub.repository.EmployeeRepository;
+import employeehub.service.EmployeeService;
 import employeehub.service.DocumentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -26,7 +26,7 @@ import java.util.List;
 public class DocumentController {
 
     private final DocumentService documentService;
-    private final EmployeeRepository employeeRepository;
+    private final EmployeeService employeeService;
 
     @PostMapping("/upload")
     @Operation(summary = "Upload a document")
@@ -34,7 +34,7 @@ public class DocumentController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam DocumentType type,
             @RequestParam("file") MultipartFile file) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.ok(documentService.upload(employee.getId(), type, file)));
     }
@@ -42,7 +42,7 @@ public class DocumentController {
     @GetMapping("/my")
     @Operation(summary = "Get current employee's documents")
     public ResponseEntity<ApiResponse<List<Document>>> getMy(@AuthenticationPrincipal UserDetails userDetails) {
-        var employee = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var employee = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(documentService.getMy(employee.getId())));
     }
 
@@ -69,7 +69,7 @@ public class DocumentController {
     public ResponseEntity<ApiResponse<Document>> verify(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var verifier = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var verifier = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(documentService.verify(id, verifier.getId())));
     }
 
@@ -78,7 +78,7 @@ public class DocumentController {
     public ResponseEntity<ApiResponse<Document>> reject(
             @PathVariable String id,
             @AuthenticationPrincipal UserDetails userDetails) {
-        var verifier = employeeRepository.findByEmail(userDetails.getUsername()).orElseThrow();
+        var verifier = employeeService.getByEmail(userDetails.getUsername());
         return ResponseEntity.ok(ApiResponse.ok(documentService.reject(id, verifier.getId())));
     }
 }

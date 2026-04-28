@@ -13,7 +13,9 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, String> {
 
     @Query("SELECT a FROM AuditLog a WHERE " +
            "(:entityType IS NULL OR a.entityType = :entityType) AND " +
-           "(:employeeId IS NULL OR a.performedBy.id = :employeeId)")
+           "(:employeeId IS NULL OR a.performedBy.id = :employeeId) AND " +
+           "(:from IS NULL OR a.timestamp >= :from) AND " +
+           "(:to IS NULL OR a.timestamp <= :to)")
     Page<AuditLog> findAllFiltered(
             @Param("entityType") String entityType,
             @Param("employeeId") String employeeId,

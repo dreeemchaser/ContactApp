@@ -3,7 +3,9 @@ package employeehub.domain;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import employeehub.domain.enums.TimesheetStatus;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -14,7 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Data
+@Getter
+@Setter
+@EqualsAndHashCode(of = "id")
 @NoArgsConstructor
 @Table(name = "timesheets")
 public class Timesheet {
